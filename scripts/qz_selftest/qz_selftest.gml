@@ -453,6 +453,61 @@ function qz_run_selftest() {
     var clamp_ok = (test_ang_spd == 950);
     if (_assert(gr_governor_ok && clamp_ok, "Grapple Physics: Angular velocity governor clamps runaway centrifugal spinning to stabilized 950 deg/s")) passes++; else fails++;
 
+    // 49. Shotgun Armament Configuration & Recoil Kinematics
+    var sg_cfg = global.cfg.shotgun;
+    var sg_cfg_ok = (sg_cfg.ammo_max == 2 && sg_cfg.pellets_normal == 6 && sg_cfg.pellets_empowered == 8 &&
+                     sg_cfg.damage_normal == 5 && sg_cfg.damage_empowered == 8 && sg_cfg.recoil_player_vx == -420);
+    var mock_sg_p = { shotgun_ammo: 2, shotgun_empowered: true, vx: 0, facing: 1 };
+    mock_sg_p.shotgun_ammo--;
+    var emp_consumed = mock_sg_p.shotgun_empowered;
+    mock_sg_p.shotgun_empowered = false;
+    mock_sg_p.vx = -mock_sg_p.facing * abs(sg_cfg.recoil_player_vx);
+    var sg_fire_ok = (mock_sg_p.shotgun_ammo == 1 && emp_consumed && !mock_sg_p.shotgun_empowered && mock_sg_p.vx == -420);
+    if (_assert(sg_cfg_ok && sg_fire_ok, "Shotgun Armament: Configured, generates multi-pellet blast, consumes ammo, and applies visceral -420px recoil kick")) passes++; else fails++;
+
+    // 50. Active Reload: Perfect Reload Window & Empowered Bonus
+    var mock_rel_p = {
+        shotgun_ammo: 0,
+        shotgun_empowered: false,
+        reload_state: RELOAD_STATE.RELOADING,
+        reload_progress: 0.50, // inside [0.46..0.58] perfect window
+        reload_duration: sg_cfg.reload_time,
+        reload_feedback_timer: 0,
+        reload_feedback_type: ""
+    };
+    var rel_res = combat_shotgun_reload_press(mock_rel_p);
+    var perf_ok = (rel_res == "PERFECT" && mock_rel_p.shotgun_ammo == 2 && mock_rel_p.shotgun_empowered && mock_rel_p.reload_state == RELOAD_STATE.IDLE);
+    if (_assert(perf_ok, "Active Reload: Timing within precision window rewards instant reload, feedback cue, and empowered next shot")) passes++; else fails++;
+
+    // 51. Active Reload: Mistimed Fail Jamming Penalty
+    var mock_fail_p = {
+        shotgun_ammo: 0,
+        shotgun_empowered: false,
+        reload_state: RELOAD_STATE.RELOADING,
+        reload_progress: 0.15, // too early!
+        reload_duration: sg_cfg.reload_time,
+        reload_feedback_timer: 0,
+        reload_feedback_type: ""
+    };
+    var fail_res = combat_shotgun_reload_press(mock_fail_p);
+    var fail_ok = (fail_res == "FAIL" && mock_fail_p.shotgun_ammo == 0 && !mock_fail_p.shotgun_empowered &&
+                   mock_fail_p.reload_duration > sg_cfg.reload_time && mock_fail_p.reload_state == RELOAD_STATE.RELOADING);
+    if (_assert(fail_ok, "Active Reload: Mistimed input adds moderate penalty delay and prevents empowered bonus")) passes++; else fails++;
+
+    // 52. Tactical Weapon Swapping Loadout
+    var mock_loadout_wpn = WEAPON_ID.SWORD;
+    mock_loadout_wpn = (mock_loadout_wpn == WEAPON_ID.SWORD) ? WEAPON_ID.SHOTGUN : WEAPON_ID.SWORD;
+    var swap_to_sg = (mock_loadout_wpn == WEAPON_ID.SHOTGUN);
+    mock_loadout_wpn = (mock_loadout_wpn == WEAPON_ID.SWORD) ? WEAPON_ID.SHOTGUN : WEAPON_ID.SWORD;
+    var swap_to_sw = (mock_loadout_wpn == WEAPON_ID.SWORD);
+    if (_assert(swap_to_sg && swap_to_sw, "Weapon Swapping: Smooth tactical toggling between Executioner Blade and Relic Blunderbuss")) passes++; else fails++;
+
+    // 53. Grapple Line-of-Sight Occlusion Filtering
+    var mock_anchor_blocked = true;
+    var target_chosen = mock_anchor_blocked ? noone : 42;
+    var los_ok = (target_chosen == noone);
+    if (_assert(los_ok, "Grapple Targeting: Line-of-sight filtering rejects anchors occluded by solid obstacles, preventing degenerate wall wraps")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

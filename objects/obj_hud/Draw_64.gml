@@ -141,11 +141,48 @@ if (p.overdrive_active) {
     var od_pulse = 0.7 + (sin(current_time * 0.012) * 0.3);
     draw_set_color(c_gold_bright);
     draw_set_alpha(od_pulse);
-    draw_text(bx, sy, "[R] OVERDRIVE READY");
+    draw_text(bx, sy, "[V] OVERDRIVE READY");
     draw_set_alpha(1.0);
 } else {
     draw_set_color(c_steel_muted);
     draw_text(bx, sy, "ENERGY: " + string(floor(p.energy)) + "%");
+}
+
+// --- C. WEAPON & ARMAMENT LOADOUT MODULE ---
+var wy = sy + 18;
+draw_set_color(c_dark_obsidian);
+draw_set_alpha(0.85);
+draw_rectangle(bx, wy, bx + bar_w, wy + 24, false);
+draw_set_color(c_panel_border);
+draw_rectangle(bx, wy, bx + bar_w, wy + 24, true);
+draw_set_alpha(1.0);
+
+var is_sg = (p.current_weapon == WEAPON_ID.SHOTGUN);
+var c_wpn = is_sg ? (p.shotgun_empowered ? c_gold_bright : c_cyan_neon) : c_steel_muted;
+draw_set_color(c_wpn);
+draw_text(bx + 6, wy + 4, is_sg ? (p.shotgun_empowered ? "[2] BLUNDERBUSS [EMP]" : "[2] RELIC BLUNDERBUSS") : "[1] EXECUTIONER BLADE");
+
+// Shotgun Ammo Pips (Right of Weapon Tag)
+if (is_sg) {
+    var pip_x = bx + bar_w - 74;
+    var pip_y = wy + 6;
+    for (var s = 0; s < global.cfg.shotgun.ammo_max; s++) {
+        var has_shell = (s < p.shotgun_ammo);
+        var c_shell = has_shell ? (p.shotgun_empowered ? c_gold_bright : c_crimson_burn) : c_panel_border;
+        draw_set_color(c_shell);
+        draw_rectangle(pip_x + (s * 14), pip_y, pip_x + (s * 14) + 10, pip_y + 11, !has_shell);
+        if (has_shell) {
+            draw_set_color(p.shotgun_empowered ? c_gold_bright : c_bone);
+            draw_rectangle(pip_x + (s * 14) + 2, pip_y + 2, pip_x + (s * 14) + 8, pip_y + 9, false);
+        }
+    }
+    if (p.shotgun_ammo <= 0) {
+        draw_set_color(c_gold_bright);
+        draw_text(bx + bar_w - 42, wy + 4, "[R]");
+    }
+} else {
+    draw_set_color(c_steel_muted);
+    draw_text(bx + bar_w - 68, wy + 4, "[Q] SWAP");
 }
 
 // =====================================================================

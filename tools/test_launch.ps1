@@ -15,3 +15,4 @@ if ($p.HasExited) {
     Write-Output "Process stopped cleanly after verification."
     exit 0
 }
+

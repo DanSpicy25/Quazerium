@@ -24,6 +24,9 @@ function GrappleController(player_inst) constructor {
         with (obj_grapple_anchor) {
             var d = point_distance(other.player.x, other.player.y, x, y);
             if (d <= cfg.range) {
+                // Line of Sight: Reject anchors blocked by solid geometry
+                if (collision_line(other.player.x, other.player.y, x, y, obj_solid, true, true) != noone) continue;
+
                 var dir = point_direction(other.player.x, other.player.y, x, y);
                 var diff = abs(angle_difference(aim_dir, dir));
                 if (diff <= cfg.cone_deg) {
@@ -41,6 +44,9 @@ function GrappleController(player_inst) constructor {
             with (obj_enemy_base) {
                 var d = point_distance(other.player.x, other.player.y, x, y);
                 if (d <= cfg.range) {
+                    // Line of sight check for enemies
+                    if (collision_line(other.player.x, other.player.y, x, y, obj_solid, true, true) != noone) continue;
+
                     var dir = point_direction(other.player.x, other.player.y, x, y);
                     var diff = abs(angle_difference(aim_dir, dir));
                     if (diff <= cfg.cone_deg) {
@@ -195,9 +201,20 @@ function GrappleController(player_inst) constructor {
                 player.vx = (cos_r * v_rad_cur) + (cos_t * v_tangential);
                 player.vy = (sin_r * v_rad_cur) + (sin_t * v_tangential);
 
-                // 3. Reel in
+                // 3. Obstacle Occlusion Protection: If rope catches on an obstacle edge, safely auto-release with preserved velocity
+                var obst = collision_line(player.x, player.y, hook_x, hook_y, obj_solid, true, true);
+                if (obst != noone) {
+                    release(false);
+                    player.vx *= 1.12;
+                    break;
+                }
+
+                // 4. Reel in & Extend Rope Control (Physics-Assisted Length Management)
                 if (input_check(ACTION.GRAPPLE) || input_check(ACTION.MOVE_UP)) {
                     rest_len = max(cfg.min_length, rest_len - (cfg.reel_speed * dt));
+                }
+                if (input_check(ACTION.MOVE_DOWN)) {
+                    rest_len = min(cfg.range, rest_len + (cfg.reel_speed * dt));
                 }
                 break;
 

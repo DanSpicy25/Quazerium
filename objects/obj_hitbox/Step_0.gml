@@ -16,6 +16,18 @@ if (timer <= 0) {
     exit;
 }
 
+// Pellet movement & solid collision
+if (is_pellet && (vx != 0 || vy != 0)) {
+    var next_x = x + (vx * dt);
+    var next_y = y + (vy * dt);
+    if (collision_line(x, y, next_x, next_y, obj_solid, true, true) != noone) {
+        instance_destroy();
+        exit;
+    }
+    x = next_x;
+    y = next_y;
+}
+
 var hx1 = x;
 var hy1 = y;
 var hx2 = x + bbox_w;

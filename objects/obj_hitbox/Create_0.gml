@@ -15,4 +15,8 @@ can_be_parried = true;
 duration = 0.1;
 timer = duration;
 hit_targets = [];
+is_pellet = false;
+vx = 0;
+vy = 0;
+color = c_white;
 

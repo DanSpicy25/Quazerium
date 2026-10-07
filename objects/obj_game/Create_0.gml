@@ -25,7 +25,13 @@ if (is_selftest) {
     exit;
 }
 
-// 3. Normal boot: transition from rm_boot to rm_arena
+// 3. Normal boot: configure 16:9 display presentation & transition to rm_arena
+if (!is_selftest) {
+    window_set_size(1280, 720);
+    surface_resize(application_surface, 1280, 720);
+    display_set_gui_size(1280, 720);
+}
+
 if (room == rm_boot) {
     room_goto(rm_arena);
 }

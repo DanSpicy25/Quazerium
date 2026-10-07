@@ -206,3 +206,127 @@ function combat_get_combo_rank(count) {
     if (count >= 1)  return { rank: "D", title: "DISRUPTOR",  r: 165, g: 180, b: 195 };
     return undefined;
 }
+
+/// Fires the shotgun weapon with multi-pellet blast and visceral recoil
+function combat_shotgun_fire(p) {
+    if (!qz_entity_exists(p)) return false;
+    var cfg = global.cfg.shotgun;
+    if (p.shotgun_ammo <= 0) {
+        combat_shotgun_reload_start(p);
+        return false;
+    }
+
+    var is_emp = p.shotgun_empowered;
+    p.shotgun_ammo--;
+    p.shotgun_empowered = false;
+
+    var num_pellets = is_emp ? cfg.pellets_empowered : cfg.pellets_normal;
+    var spread_deg  = is_emp ? cfg.spread_empowered : cfg.spread_normal;
+    var dmg_pellet  = is_emp ? cfg.damage_empowered : cfg.damage_normal;
+    var p_range     = is_emp ? cfg.range_empowered : cfg.range_normal;
+    var hitstop_val = is_emp ? cfg.hitstop_empowered : cfg.hitstop_normal;
+    var p_color     = is_emp ? make_color_rgb(212, 175, 55) : make_color_rgb(238, 235, 224);
+
+    var base_ang = (p.facing > 0) ? 0 : 180;
+    var spawn_x  = p.x + (p.facing * (p.bbox_hw + 14));
+    var spawn_y  = p.y - 4;
+
+    // Backward visceral recoil kick on player
+    p.vx = -p.facing * abs(cfg.recoil_player_vx);
+    p.vy = min(p.vy, cfg.recoil_player_vy);
+    p.shotgun_recoil_timer = 0.20;
+
+    // Spawn pellets
+    for (var i = 0; i < num_pellets; i++) {
+        var spread_t = (num_pellets > 1) ? (i / (num_pellets - 1)) - 0.5 : 0;
+        var p_ang = base_ang + (spread_t * spread_deg) + random_range(-2, 2);
+        var hb = instance_create_layer(spawn_x, spawn_y, "Instances", obj_hitbox);
+        hb.owner = p;
+        hb.team = TEAM.PLAYER;
+        hb.bbox_w = 12;
+        hb.bbox_h = 12;
+        hb.damage = dmg_pellet;
+        hb.kb_x = lengthdir_x(is_emp ? 460 : 320, p_ang);
+        hb.kb_y = lengthdir_y(is_emp ? 240 : 160, p_ang) - 80;
+        hb.hitstop = hitstop_val;
+        hb.element = p.active_element;
+        hb.can_be_parried = false;
+        hb.duration = p_range / cfg.pellet_speed;
+        hb.timer = hb.duration;
+        hb.is_pellet = true;
+        hb.vx = lengthdir_x(cfg.pellet_speed, p_ang);
+        hb.vy = lengthdir_y(cfg.pellet_speed, p_ang);
+        hb.color = p_color;
+    }
+
+    events_emit(EVT.SHOTGUN_FIRE, { player: p, empowered: is_emp, pellets: num_pellets });
+    return true;
+}
+
+/// Starts shotgun active reload process
+function combat_shotgun_reload_start(p) {
+    if (!qz_entity_exists(p)) return;
+    if (p.reload_state == RELOAD_STATE.RELOADING) return;
+    var cfg = global.cfg.shotgun;
+    p.reload_state = RELOAD_STATE.RELOADING;
+    p.reload_progress = 0.0;
+    p.reload_duration = cfg.reload_time;
+    p.reload_feedback_timer = 0;
+    p.reload_feedback_type = "";
+    events_emit(EVT.SHOTGUN_RELOAD_START, { player: p });
+}
+
+/// Evaluates player press during active reload
+function combat_shotgun_reload_press(p) {
+    if (!qz_entity_exists(p) || p.reload_state != RELOAD_STATE.RELOADING) return "";
+    var cfg = global.cfg.shotgun;
+    var prog = p.reload_progress;
+
+    if (prog >= cfg.perfect_start && prog <= cfg.perfect_end) {
+        // PERFECT RELOAD!
+        p.shotgun_ammo = cfg.ammo_max;
+        p.shotgun_empowered = true;
+        p.reload_state = RELOAD_STATE.IDLE;
+        p.reload_feedback_type = "PERFECT";
+        p.reload_feedback_timer = 0.65;
+        events_emit(EVT.SHOTGUN_RELOAD_PERFECT, { player: p });
+        return "PERFECT";
+    } else if (prog >= cfg.window_start && prog <= cfg.window_end) {
+        // NORMAL RELOAD (early/late within window)
+        p.shotgun_ammo = cfg.ammo_max;
+        p.shotgun_empowered = false;
+        p.reload_state = RELOAD_STATE.IDLE;
+        p.reload_feedback_type = "NORMAL";
+        p.reload_feedback_timer = 0.40;
+        events_emit(EVT.SHOTGUN_RELOAD_COMPLETE, { player: p, empowered: false });
+        return "NORMAL";
+    } else {
+        // FAIL / MISTIMED
+        p.reload_duration += cfg.fail_penalty_time;
+        p.shotgun_empowered = false;
+        p.reload_feedback_type = "FAIL";
+        p.reload_feedback_timer = 0.40;
+        events_emit(EVT.SHOTGUN_RELOAD_FAIL, { player: p });
+        return "FAIL";
+    }
+}
+
+/// Updates shotgun reload state over time
+function combat_shotgun_reload_update(p, dt) {
+    if (!qz_entity_exists(p)) return;
+    if (p.reload_feedback_timer > 0) p.reload_feedback_timer -= dt;
+
+    if (p.reload_state != RELOAD_STATE.RELOADING) return;
+    p.reload_progress += dt / max(0.01, p.reload_duration);
+
+    if (p.reload_progress >= 1.0) {
+        // Finished naturally without active press
+        var cfg = global.cfg.shotgun;
+        p.shotgun_ammo = cfg.ammo_max;
+        p.shotgun_empowered = false;
+        p.reload_state = RELOAD_STATE.IDLE;
+        p.reload_feedback_type = "NORMAL";
+        p.reload_feedback_timer = 0.30;
+        events_emit(EVT.SHOTGUN_RELOAD_COMPLETE, { player: p, empowered: false });
+    }
+}

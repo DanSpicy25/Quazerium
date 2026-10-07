@@ -194,25 +194,56 @@ switch (state) {
             squash_y = 1.40;
         }
 
-        // Attack trigger / Charging
-        if (input_check(ACTION.ATTACK)) {
-            charge_timer += dt;
-            if (charge_timer >= ccfg.charge_time) is_charging = true;
+        // Weapon Swap
+        if (input_check_pressed(ACTION.WEAPON_SWAP)) {
+            current_weapon = (current_weapon == WEAPON_ID.SWORD) ? WEAPON_ID.SHOTGUN : WEAPON_ID.SWORD;
+            events_emit(EVT.WEAPON_SWAPPED, { player: id, weapon: current_weapon });
         }
-        if (input_check_released(ACTION.ATTACK)) {
-            state = PSTATE.ATTACK;
-            attack_phase = "windup";
-            if (is_charging) {
-                // Charged attack!
-                attack_phase_timer = ccfg.charged.windup;
-                is_charging = false;
-                charge_timer = 0;
-            } else {
-                // Normal combo chain attack
-                attack_step = (combo_count) mod array_length(ccfg.chain);
-                attack_phase_timer = ccfg.chain[attack_step].windup;
+
+        // Shotgun Active Reload Trigger
+        if (input_check_pressed(ACTION.RELOAD)) {
+            if (reload_state == RELOAD_STATE.RELOADING) {
+                combat_shotgun_reload_press(id);
+            } else if (shotgun_ammo < global.cfg.shotgun.ammo_max) {
+                combat_shotgun_reload_start(id);
             }
-            events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: is_charging });
+        }
+
+        // Attack trigger / Charging (Weapon Dependent)
+        if (current_weapon == WEAPON_ID.SHOTGUN) {
+            if (input_check_pressed(ACTION.ATTACK)) {
+                if (reload_state == RELOAD_STATE.RELOADING) {
+                    combat_shotgun_reload_press(id);
+                } else if (shotgun_ammo > 0) {
+                    combat_shotgun_fire(id);
+                    squash_x = 1.30;
+                    squash_y = 0.80;
+                    weapon_recoil_x = -16 * facing;
+                } else {
+                    combat_shotgun_reload_start(id);
+                }
+            }
+        } else {
+            // Sword Combo / Charge attack
+            if (input_check(ACTION.ATTACK)) {
+                charge_timer += dt;
+                if (charge_timer >= ccfg.charge_time) is_charging = true;
+            }
+            if (input_check_released(ACTION.ATTACK)) {
+                state = PSTATE.ATTACK;
+                attack_phase = "windup";
+                if (is_charging) {
+                    // Charged attack!
+                    attack_phase_timer = ccfg.charged.windup;
+                    is_charging = false;
+                    charge_timer = 0;
+                } else {
+                    // Normal combo chain attack
+                    attack_step = (combo_count) mod array_length(ccfg.chain);
+                    attack_phase_timer = ccfg.chain[attack_step].windup;
+                }
+                events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: is_charging });
+            }
         }
 
         // Parry trigger
@@ -241,13 +272,25 @@ switch (state) {
 
         // Responsive attack cancel during dash for aggressive momentum chaining
         if (input_check_pressed(ACTION.ATTACK)) {
-            state = PSTATE.ATTACK;
-            attack_phase = "windup";
-            attack_step = (combo_count) mod array_length(ccfg.chain);
-            attack_phase_timer = ccfg.chain[attack_step].windup;
-            dash_timer = 0;
-            events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: false });
-            break;
+            if (current_weapon == WEAPON_ID.SHOTGUN) {
+                if (shotgun_ammo > 0) {
+                    combat_shotgun_fire(id);
+                    squash_x = 1.30;
+                    squash_y = 0.80;
+                    weapon_recoil_x = -16 * facing;
+                    dash_timer = 0;
+                    state = on_ground ? PSTATE.IDLE : PSTATE.FALL;
+                    break;
+                }
+            } else {
+                state = PSTATE.ATTACK;
+                attack_phase = "windup";
+                attack_step = (combo_count) mod array_length(ccfg.chain);
+                attack_phase_timer = ccfg.chain[attack_step].windup;
+                dash_timer = 0;
+                events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: false });
+                break;
+            }
         }
 
         // Jump cancel during grounded dash (Wave-dash)
@@ -453,4 +496,13 @@ for (var tr = 0; tr < 4; tr++) {
     talisman_ribbons[tr].x = lerp(talisman_ribbons[tr].x, lead_x - (vx * dt * 0.18), 0.40);
     talisman_ribbons[tr].y = lerp(talisman_ribbons[tr].y, lead_y + 3 - (vy * dt * 0.15), 0.40);
 }
+
+// 13. Shotgun Reload & Procedural Animation Updates
+combat_shotgun_reload_update(id, dt);
+shotgun_recoil_timer = max(0, shotgun_recoil_timer - dt);
+weapon_recoil_x = qz_approach(weapon_recoil_x, 0, 90 * dt);
+halo_rot += dt * 35;
+
+var target_tilt = (state == PSTATE.RUN) ? (facing * 7) : 0;
+torso_tilt = qz_approach(torso_tilt, target_tilt, 45 * dt);
 

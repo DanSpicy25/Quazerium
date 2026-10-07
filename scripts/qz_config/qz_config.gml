@@ -38,6 +38,31 @@ function qz_config_init() {
             cancel_recover_with_parry: true,
         },
 
+        shotgun: {
+            ammo_max: 2,
+            pellets_normal: 6,
+            pellets_empowered: 8,
+            spread_normal: 24,
+            spread_empowered: 12,
+            damage_normal: 5,
+            damage_empowered: 8,
+            range_normal: 340,
+            range_empowered: 420,
+            pellet_speed: 1600,
+            recoil_player_vx: -420,
+            recoil_player_vy: -120,
+            hitstop_normal: 0.05,
+            hitstop_empowered: 0.10,
+            windup: 0.04,
+            recover: 0.22,
+            reload_time: 1.10,
+            window_start: 0.40,
+            window_end: 0.65,
+            perfect_start: 0.46,
+            perfect_end: 0.58,
+            fail_penalty_time: 0.35,
+        },
+
         parry: {
             window: 0.30, perfect_window: 0.12, recover: 0.22, buffer: 0.05,
             energy_normal: 8, energy_perfect: 25,
@@ -150,6 +175,8 @@ function qz_config_init() {
     r[EVT.ENCOUNTER_CLEAR]  = { trauma: 0.25, impulse: 0,  zoom: 0.06 };
     r[EVT.ENCOUNTER_VICTORY]= { trauma: 0.40, impulse: 0,  zoom: 0.10 };
     r[EVT.HAZARD_TRIGGERED] = { trauma: 0.30, impulse: 8,  zoom: 0.02 };
+    r[EVT.SHOTGUN_FIRE]     = { trauma: 0.35, impulse: 14, zoom: 0.03 };
+    r[EVT.SHOTGUN_RELOAD_PERFECT] = { trauma: 0.15, impulse: 6, zoom: 0.04 };
     global.cfg.camera.reactions = r;
 }
 

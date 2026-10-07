@@ -99,3 +99,19 @@ for (var tr = 0; tr < 4; tr++) {
     talisman_ribbons[tr] = { x: x, y: y };
 }
 
+// Weapon Loadout & Shotgun System
+current_weapon = WEAPON_ID.SWORD;
+shotgun_ammo = global.cfg.shotgun.ammo_max;
+shotgun_empowered = false;
+shotgun_recoil_timer = 0;
+reload_state = RELOAD_STATE.IDLE;
+reload_progress = 0.0;
+reload_duration = global.cfg.shotgun.reload_time;
+reload_feedback_timer = 0;
+reload_feedback_type = "";
+
+// Procedural Stickman Animation
+torso_tilt = 0.0;
+weapon_recoil_x = 0.0;
+halo_rot = 0.0;
+
