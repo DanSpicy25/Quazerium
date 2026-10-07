@@ -51,11 +51,17 @@ if (input_check_pressed(ACTION.ELEMENT)) {
     events_emit(EVT.ELEMENT_CHANGED, { player: id, element: active_element });
 }
 
-// 4. Power cycle & activation (1, 2, 3 or Q/F)
-if (input_check_pressed(ACTION.POWER_SELECT)) {
-    if (keyboard_check_pressed(ord("1"))) selected_power_id = POWER_ID.SHOCKWAVE;
-    if (keyboard_check_pressed(ord("2"))) selected_power_id = POWER_ID.BLADE_SURGE;
-    if (keyboard_check_pressed(ord("3"))) selected_power_id = POWER_ID.BLINK;
+// 4. Power cycle & activation (3, 4, 5 and F)
+if (keyboard_check_pressed(ord("3"))) {
+    selected_power_id = POWER_ID.SHOCKWAVE;
+    events_emit(EVT.POWER_SELECTED, selected_power_id);
+}
+if (keyboard_check_pressed(ord("4"))) {
+    selected_power_id = POWER_ID.BLADE_SURGE;
+    events_emit(EVT.POWER_SELECTED, selected_power_id);
+}
+if (keyboard_check_pressed(ord("5"))) {
+    selected_power_id = POWER_ID.BLINK;
     events_emit(EVT.POWER_SELECTED, selected_power_id);
 }
 
@@ -194,25 +200,34 @@ switch (state) {
             squash_y = 1.40;
         }
 
-        // Weapon Swap
+        // Weapon Selection (1 = Sword, 2 = Shotgun, Q or Wheel = Swap)
+        var target_weapon = current_weapon;
+        if (keyboard_check_pressed(ord("1"))) target_weapon = WEAPON_ID.SWORD;
+        if (keyboard_check_pressed(ord("2"))) target_weapon = WEAPON_ID.SHOTGUN;
         if (input_check_pressed(ACTION.WEAPON_SWAP)) {
-            current_weapon = (current_weapon == WEAPON_ID.SWORD) ? WEAPON_ID.SHOTGUN : WEAPON_ID.SWORD;
+            target_weapon = (current_weapon == WEAPON_ID.SWORD) ? WEAPON_ID.SHOTGUN : WEAPON_ID.SWORD;
+        }
+        if (target_weapon != current_weapon) {
+            current_weapon = target_weapon;
             events_emit(EVT.WEAPON_SWAPPED, { player: id, weapon: current_weapon });
         }
 
-        // Shotgun Active Reload Trigger
+        // Shotgun Active Reload Trigger (R key)
         if (input_check_pressed(ACTION.RELOAD)) {
-            if (reload_state == RELOAD_STATE.RELOADING) {
-                combat_shotgun_reload_press(id);
-            } else if (shotgun_ammo < global.cfg.shotgun.ammo_max) {
-                combat_shotgun_reload_start(id);
+            if (current_weapon == WEAPON_ID.SHOTGUN) {
+                if (reload_state == RELOAD_STATE.RELOADING) {
+                    combat_shotgun_reload_press(id);
+                } else if (shotgun_ammo < global.cfg.shotgun.ammo_max) {
+                    combat_shotgun_reload_start(id);
+                }
             }
         }
 
-        // Attack trigger / Charging (Weapon Dependent)
+        // Attack trigger (Weapon Dependent)
         if (current_weapon == WEAPON_ID.SHOTGUN) {
             if (input_check_pressed(ACTION.ATTACK)) {
                 if (reload_state == RELOAD_STATE.RELOADING) {
+                    // Tap during reload hits active reload attempt
                     combat_shotgun_reload_press(id);
                 } else if (shotgun_ammo > 0) {
                     combat_shotgun_fire(id);
@@ -224,25 +239,15 @@ switch (state) {
                 }
             }
         } else {
-            // Sword Combo / Charge attack
-            if (input_check(ACTION.ATTACK)) {
-                charge_timer += dt;
-                if (charge_timer >= ccfg.charge_time) is_charging = true;
-            }
-            if (input_check_released(ACTION.ATTACK)) {
+            // Sword Combo: INSTANT ATTACK ON CLICK!
+            if (input_check_pressed(ACTION.ATTACK)) {
                 state = PSTATE.ATTACK;
                 attack_phase = "windup";
-                if (is_charging) {
-                    // Charged attack!
-                    attack_phase_timer = ccfg.charged.windup;
-                    is_charging = false;
-                    charge_timer = 0;
-                } else {
-                    // Normal combo chain attack
-                    attack_step = (combo_count) mod array_length(ccfg.chain);
-                    attack_phase_timer = ccfg.chain[attack_step].windup;
-                }
-                events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: is_charging });
+                attack_step = (combo_count) mod array_length(ccfg.chain);
+                attack_phase_timer = ccfg.chain[attack_step].windup;
+                is_charging = false;
+                charge_timer = 0;
+                events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: false });
             }
         }
 

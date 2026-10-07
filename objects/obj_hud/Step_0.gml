@@ -23,6 +23,10 @@ if (quality_notify_timer > 0) {
     quality_notify_timer = max(0, quality_notify_timer - dt);
 }
 
+if (tutorial_banner_timer > 0) {
+    tutorial_banner_timer = max(0, tutorial_banner_timer - dt);
+}
+
 if (is_player_dead) {
     if (keyboard_check_pressed(vk_space) || keyboard_check_pressed(ord("R"))) {
         room_restart();

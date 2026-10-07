@@ -89,7 +89,7 @@ function input_update() {
                 is_down = keyboard_check(ord("F")) || (pad_connected && gamepad_button_check(pad, gp_shoulderlb));
                 break;
             case ACTION.POWER_SELECT:
-                is_down = keyboard_check(ord("3")) || keyboard_check(ord("4"));
+                is_down = keyboard_check(ord("3")) || keyboard_check(ord("4")) || keyboard_check(ord("5"));
                 break;
             case ACTION.ELEMENT:
                 is_down = keyboard_check(vk_tab) || (pad_connected && gamepad_button_check(pad, gp_select));
@@ -98,7 +98,7 @@ function input_update() {
                 is_down = keyboard_check(ord("V")) || keyboard_check(ord("G")) || (pad_connected && gamepad_button_check(pad, gp_stickl) && gamepad_button_check(pad, gp_stickr));
                 break;
             case ACTION.WEAPON_SWAP:
-                is_down = keyboard_check(ord("Q")) || keyboard_check(ord("1")) || keyboard_check(ord("2")) || mouse_wheel_up() || mouse_wheel_down() || (pad_connected && gamepad_button_check(pad, gp_padu));
+                is_down = keyboard_check(ord("Q")) || mouse_wheel_up() || mouse_wheel_down() || (pad_connected && gamepad_button_check(pad, gp_padu));
                 break;
             case ACTION.RELOAD:
                 is_down = keyboard_check(ord("R")) || (pad_connected && gamepad_button_check(pad, gp_face4));

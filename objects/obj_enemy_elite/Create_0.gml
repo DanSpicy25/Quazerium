@@ -47,33 +47,79 @@ attack_execute_fn = function() {
 };
 
 draw_body_fn = function(c_body, c_rim) {
-    // Apex chassis with golden ornamental crest
-    var c_elite_body = make_color_rgb(28, 22, 38);
+    // Apex Golden-Crowned Stickman with dual energy sabers
     var c_gold_crest = make_color_rgb(255, 215, 0);
+    var c_saber      = make_color_rgb(255, 60, 80);
 
-    draw_set_color(c_elite_body);
-    draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, false);
+    var eh_x   = x;
+    var eh_y   = y - (bbox_hh * 0.65);
+    var eh_r   = 7.0;
+    var e_neck = eh_y + eh_r;
+    var e_hip_y = y + (bbox_hh * 0.22);
+    var e_sh_w = 11;
+    var e_sh_y = e_neck + 3;
+    var e_hp_w = 8;
+    var e_foot_y = y + bbox_hh;
+
+    // Legs
+    var e_hip_l = eh_x - (e_hp_w * 0.7);
+    var e_hip_r = eh_x + (e_hp_w * 0.7);
+    var ek1_x = e_hip_l - 3; var ek1_y = e_hip_y + 9; var ef1_x = e_hip_l - 5; var ef1_y = e_foot_y;
+    var ek2_x = e_hip_r + 3; var ek2_y = e_hip_y + 9; var ef2_x = e_hip_r + 5; var ef2_y = e_foot_y;
+
+    if (state == ESTATE.CHASE) {
+        var e_walk = current_time * 0.015;
+        ek1_x = e_hip_l + (sin(e_walk) * 8 * facing); ef1_x = e_hip_l + (sin(e_walk) * 14 * facing);
+        ek2_x = e_hip_r + (sin(e_walk + pi) * 8 * facing); ef2_x = e_hip_r + (sin(e_walk + pi) * 14 * facing);
+    }
+
     draw_set_color(c_gold_crest);
-    draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, true);
+    draw_line_width(e_hip_l, e_hip_y, ek1_x, ek1_y, 3.5);
+    draw_line_width(ek1_x, ek1_y, ef1_x, ef1_y, 3.0);
+    draw_line_width(e_hip_r, e_hip_y, ek2_x, ek2_y, 3.5);
+    draw_line_width(ek2_x, ek2_y, ef2_x, ef2_y, 3.0);
+    draw_circle(ek1_x, ek1_y, 2.5, false);
+    draw_circle(ek2_x, ek2_y, 2.5, false);
 
-    // V-shaped champion crest
+    // Golden Spine & Shoulders
     draw_set_color(c_gold_crest);
-    draw_triangle(x, y - bbox_hh - 8, x - 8, y - bbox_hh + 2, x + 8, y - bbox_hh + 2, false);
+    draw_line_width(eh_x, e_neck, eh_x, e_hip_y, 4.0);
+    draw_line_width(eh_x - e_sh_w, e_sh_y, eh_x + e_sh_w, e_sh_y, 3.5);
+    draw_line_width(eh_x - e_hp_w, e_hip_y, eh_x + e_hp_w, e_hip_y, 3.0);
 
-    // Twin energy sabers at hip
-    var saber_ox = x + (facing * 4);
-    draw_set_color(make_color_rgb(255, 60, 80));
-    draw_line_width(saber_ox - 4, y + 2, saber_ox + (facing * 14), y - 10, 2);
-    draw_line_width(saber_ox - 6, y + 6, saber_ox + (facing * 12), y - 6, 2);
+    // Rib crossbars
+    draw_line_width(eh_x - 6, lerp(e_sh_y, e_hip_y, 0.4), eh_x + 6, lerp(e_sh_y, e_hip_y, 0.4), 2.0);
+    draw_line_width(eh_x - 5, lerp(e_sh_y, e_hip_y, 0.7), eh_x + 5, lerp(e_sh_y, e_hip_y, 0.7), 2.0);
 
-    // Dual-core reactor
+    // Head & Champion Crown
+    draw_set_color(c_body);
+    draw_circle(eh_x, eh_y, eh_r, false);
     draw_set_color(c_gold_crest);
-    draw_circle(x - 3, y - 2, 2.5, false);
-    draw_set_color(make_color_rgb(255, 80, 80));
-    draw_circle(x + 3, y - 2, 2.5, false);
+    draw_circle(eh_x, eh_y, eh_r, true);
 
-    // Sensor eye
-    var eye_x = x + (facing * (bbox_hw - 4));
+    // V-shaped champion golden crest
+    draw_triangle(eh_x, eh_y - eh_r - 9, eh_x - 7, eh_y - eh_r + 1, eh_x + 7, eh_y - eh_r + 1, false);
+
+    // Eye
     draw_set_color(c_white);
-    draw_circle(eye_x, y - 8, 2, false);
+    draw_circle(eh_x + (facing * 3), eh_y, 2, false);
+
+    // Arms Holding Twin Energy Sabers
+    var sh_front = (facing > 0) ? (eh_x + e_sh_w) : (eh_x - e_sh_w);
+    var sh_back  = (facing > 0) ? (eh_x - e_sh_w) : (eh_x + e_sh_w);
+    var h1_x = sh_front + (facing * 10);
+    var h1_y = y - 2;
+    var h2_x = sh_back + (facing * 6);
+    var h2_y = y + 2;
+
+    draw_set_color(c_gold_crest);
+    draw_line_width(sh_front, e_sh_y, h1_x, h1_y, 2.5);
+    draw_line_width(sh_back, e_sh_y, h2_x, h2_y, 2.5);
+
+    // Glowing energy sabers
+    draw_set_color(c_saber);
+    draw_line_width(h1_x, h1_y, h1_x + (facing * 18), h1_y - 12, 3.0);
+    draw_line_width(h2_x, h2_y, h2_x + (facing * 14), h2_y - 8, 2.5);
+    draw_set_color(c_white);
+    draw_line_width(h1_x, h1_y, h1_x + (facing * 18), h1_y - 12, 1.0);
 };

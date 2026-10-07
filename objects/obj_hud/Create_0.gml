@@ -11,6 +11,7 @@ prev_combo = 0;
 
 quality_notify_text = "";
 quality_notify_timer = 0.0;
+tutorial_banner_timer = 9.0;
 is_player_dead = false;
 
 events_subscribe(EVT.HIT_CONFIRMED, function(evt, data) {

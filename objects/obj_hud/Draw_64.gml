@@ -18,6 +18,7 @@ var c_gold_bright   = make_color_rgb(255, 215, 0);
 var c_crimson_burn  = make_color_rgb(255, 45, 65);
 var c_steel_muted   = make_color_rgb(140, 160, 180);
 var c_emerald_tech  = make_color_rgb(40, 230, 130);
+var c_bone          = make_color_rgb(238, 235, 224);
 
 // =====================================================================
 // 1. TOP-LEFT: VITALITY & ENERGY ENGINE
@@ -150,40 +151,56 @@ if (p.overdrive_active) {
 
 // --- C. WEAPON & ARMAMENT LOADOUT MODULE ---
 var wy = sy + 18;
-draw_set_color(c_dark_obsidian);
-draw_set_alpha(0.85);
-draw_rectangle(bx, wy, bx + bar_w, wy + 24, false);
-draw_set_color(c_panel_border);
-draw_rectangle(bx, wy, bx + bar_w, wy + 24, true);
-draw_set_alpha(1.0);
-
 var is_sg = (p.current_weapon == WEAPON_ID.SHOTGUN);
-var c_wpn = is_sg ? (p.shotgun_empowered ? c_gold_bright : c_cyan_neon) : c_steel_muted;
-draw_set_color(c_wpn);
-draw_text(bx + 6, wy + 4, is_sg ? (p.shotgun_empowered ? "[2] BLUNDERBUSS [EMP]" : "[2] RELIC BLUNDERBUSS") : "[1] EXECUTIONER BLADE");
 
-// Shotgun Ammo Pips (Right of Weapon Tag)
-if (is_sg) {
-    var pip_x = bx + bar_w - 74;
-    var pip_y = wy + 6;
-    for (var s = 0; s < global.cfg.shotgun.ammo_max; s++) {
-        var has_shell = (s < p.shotgun_ammo);
-        var c_shell = has_shell ? (p.shotgun_empowered ? c_gold_bright : c_crimson_burn) : c_panel_border;
-        draw_set_color(c_shell);
-        draw_rectangle(pip_x + (s * 14), pip_y, pip_x + (s * 14) + 10, pip_y + 11, !has_shell);
-        if (has_shell) {
-            draw_set_color(p.shotgun_empowered ? c_gold_bright : c_bone);
-            draw_rectangle(pip_x + (s * 14) + 2, pip_y + 2, pip_x + (s * 14) + 8, pip_y + 9, false);
-        }
-    }
-    if (p.shotgun_ammo <= 0) {
-        draw_set_color(c_gold_bright);
-        draw_text(bx + bar_w - 42, wy + 4, "[R]");
-    }
-} else {
-    draw_set_color(c_steel_muted);
-    draw_text(bx + bar_w - 68, wy + 4, "[Q] SWAP");
+// Weapon 1: Executioner Blade Tab
+var w1_w = (bar_w / 2) - 3;
+draw_set_color(c_dark_obsidian);
+draw_set_alpha(0.88);
+draw_rectangle(bx, wy, bx + w1_w, wy + 26, false);
+draw_set_color(!is_sg ? c_gold_bright : c_panel_border);
+draw_set_alpha(1.0);
+draw_rectangle(bx, wy, bx + w1_w, wy + 26, true);
+if (!is_sg) {
+    draw_set_color(c_gold_bright);
+    draw_line_width(bx, wy - 2, bx + w1_w, wy - 2, 2);
 }
+draw_set_color(!is_sg ? c_white : c_steel_muted);
+draw_text(bx + 6, wy + 5, "[1] SWORD");
+
+// Weapon 2: Relic Blunderbuss Tab
+var w2_x = bx + w1_w + 6;
+var w2_w = w1_w;
+draw_set_color(c_dark_obsidian);
+draw_set_alpha(0.88);
+draw_rectangle(w2_x, wy, w2_x + w2_w, wy + 26, false);
+draw_set_color(is_sg ? (p.shotgun_empowered ? c_gold_bright : c_cyan_neon) : c_panel_border);
+draw_set_alpha(1.0);
+draw_rectangle(w2_x, wy, w2_x + w2_w, wy + 26, true);
+if (is_sg) {
+    draw_set_color(p.shotgun_empowered ? c_gold_bright : c_cyan_neon);
+    draw_line_width(w2_x, wy - 2, w2_x + w2_w, wy - 2, 2);
+}
+draw_set_color(is_sg ? (p.shotgun_empowered ? c_gold_bright : c_cyan_neon) : c_steel_muted);
+draw_text(w2_x + 6, wy + 5, p.shotgun_empowered ? "[2] SHOTGUN*" : "[2] SHOTGUN");
+
+// Shotgun Ammo Pips inside Tab
+var pip_x = w2_x + w2_w - 38;
+var pip_y = wy + 7;
+for (var s = 0; s < global.cfg.shotgun.ammo_max; s++) {
+    var has_shell = (s < p.shotgun_ammo);
+    var c_shell = has_shell ? (p.shotgun_empowered ? c_gold_bright : c_crimson_burn) : c_panel_border;
+    draw_set_color(c_shell);
+    draw_rectangle(pip_x + (s * 15), pip_y, pip_x + (s * 15) + 11, pip_y + 11, !has_shell);
+    if (has_shell) {
+        draw_set_color(p.shotgun_empowered ? c_gold_bright : c_bone);
+        draw_rectangle(pip_x + (s * 15) + 2, pip_y + 2, pip_x + (s * 15) + 9, pip_y + 9, false);
+    }
+}
+
+// Sub-strip: Quick Swap & Reload Hint
+draw_set_color(c_steel_muted);
+draw_text(bx, wy + 30, "[Q] SWAP WEAPON  |  [R] ACTIVE RELOAD");
 
 // =====================================================================
 // 2. MID-LEFT: DYNAMIC ARCADE COMBO RANK ENGINE
@@ -338,7 +355,7 @@ var deck_w = (3 * card_w) + (2 * card_gap);
 var start_pw_x = pw_cx - (deck_w / 2);
 
 var powers_list = [POWER_ID.SHOCKWAVE, POWER_ID.BLADE_SURGE, POWER_ID.BLINK];
-var power_keys  = ["1", "2", "3"];
+var power_keys  = ["3", "4", "5"];
 var power_names_short = ["WAVE", "SURGE", "BLINK"];
 
 for (var k = 0; k < 3; k++) {
@@ -410,7 +427,7 @@ for (var k = 0; k < 3; k++) {
 // Powers Command Sub-label
 draw_set_color(c_steel_muted);
 draw_set_halign(fa_center);
-draw_text(pw_cx, pw_cy + card_h + 6, "[Q] CAST ACTIVE POWER  |  [1-3] SELECT");
+draw_text(pw_cx, pw_cy + card_h + 6, "[F] CAST ACTIVE POWER  |  [3-5] SELECT POWER");
 draw_set_halign(fa_left);
 
 // =====================================================================
@@ -524,13 +541,41 @@ if (variable_global_exists("director")) {
 }
 
 // =====================================================================
+// 5C. TACTICAL COMBAT TUTORIAL CARD (Active on Boot)
+// =====================================================================
+if (tutorial_banner_timer > 0) {
+    var tut_alpha = clamp(tutorial_banner_timer / 1.0, 0, 1);
+    var tc_w = 680;
+    var tc_h = 76;
+    var tc_x = 640 - (tc_w / 2);
+    var tc_y = 190;
+
+    draw_set_color(c_dark_obsidian);
+    draw_set_alpha(tut_alpha * 0.92);
+    draw_rectangle(tc_x, tc_y, tc_x + tc_w, tc_y + tc_h, false);
+    draw_set_color(c_gold_bright);
+    draw_set_alpha(tut_alpha);
+    draw_rectangle(tc_x, tc_y, tc_x + tc_w, tc_y + tc_h, true);
+
+    draw_set_halign(fa_center);
+    draw_set_color(c_gold_bright);
+    draw_text(640, tc_y + 8, "// PROTOCOL COMBAT OPERATIONAL CONTROLS //");
+    draw_set_color(c_white);
+    draw_text(640, tc_y + 28, "[1] SWORD  |  [2] SHOTGUN  |  [Q] SWAP WEAPON  |  [R] ACTIVE RELOAD");
+    draw_set_color(c_cyan_neon);
+    draw_text(640, tc_y + 48, "[L-CLICK] ATTACK  |  [R-CLICK] PARRY  |  [E] GRAPPLE  |  [SPACE] JUMP/DBL  |  [SHIFT] DASH");
+    draw_set_halign(fa_left);
+    draw_set_alpha(1.0);
+}
+
+// =====================================================================
 // 6. BOTTOM-RIGHT: MINIMALIST TACTICAL CONTROLS LEGEND
 // =====================================================================
 var leg_rx = 1256;
 var leg_ry = 696;
 draw_set_halign(fa_right);
 draw_set_color(make_color_rgb(105, 120, 135));
-draw_text(leg_rx, leg_ry, "[A/D] MOVE  [SPACE] JUMP  [SHIFT] DASH  [J] ATK  [K] PARRY  [E] HOOK  [F1] DIAG  [F2] PROFILE");
+draw_text(leg_rx, leg_ry, "[A/D] MOVE  [SPACE] JUMP/DBL  [SHIFT] DASH  [L-CLICK] ATK  [R-CLICK] PARRY  [1] SWORD  [2] SHOTGUN  [Q] SWAP  [R] RELOAD  [E] HOOK  [F] POWER");
 draw_set_halign(fa_left);
 
 // =====================================================================

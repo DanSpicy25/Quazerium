@@ -1,46 +1,198 @@
 // =====================================================================
-// QUAZERIUM — OBJ_ENEMY_BASE: Cybernetic Automaton Stylized Render
-// Distinct visual cues for windup telegraphs, hit flash, stun & status.
+// QUAZERIUM — OBJ_ENEMY_BASE: Occult Adversary Stickman Render
+// True procedural stickman silhouette with horned effigy mask, central spine,
+// articulated 2-segment stick legs with knee nodes, articulated stick arms
+// holding a jagged cleaver, telegraph cues, stun stars, and floating health.
+// ABSOLUTELY ZERO SOLID RECTANGLE BODY BLOCKS!
 // =====================================================================
 
-var c_body = make_color_rgb(46, 22, 28);
+var c_body = make_color_rgb(32, 18, 24);
 var c_rim  = make_color_rgb(240, 50, 60);
 
 if (hit_flash > 0) {
     c_body = c_white;
     c_rim  = c_white;
 } else if (state == ESTATE.WINDUP) {
-    c_rim = make_color_rgb(255, 140, 20); // Orange warning cue
+    c_rim  = make_color_rgb(255, 140, 20); // Orange warning cue
+    c_body = make_color_rgb(50, 25, 15);
 } else if (state == ESTATE.STUNNED) {
     c_body = make_color_rgb(26, 32, 60);
     c_rim  = make_color_rgb(100, 140, 255); // Electric blue
 }
 
-// 1. Armored Automaton Frame
+// 1. Procedural Stickman Effigy (or custom specialized stickman if draw_body_fn is provided)
 if (is_callable(draw_body_fn)) {
     draw_body_fn(c_body, c_rim);
 } else {
-    draw_set_color(c_body);
-    draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, false);
+    // --- STICKMAN ADVERSARY ANATOMY ---
+    var eh_x   = x;
+    var eh_y   = y - (bbox_hh * 0.65);
+    var eh_r   = 6.5;
+    var e_neck = eh_y + eh_r;
+    var e_hip_y = y + (bbox_hh * 0.22);
+    var e_sh_w = 10;
+    var e_sh_y = e_neck + 3;
+    var e_hp_w = 7;
+    var e_foot_y = y + bbox_hh;
 
-    // Woodcut diagonal etch hatchings on enemy effigy
-    draw_set_color(make_color_rgb(18, 14, 18));
-    for (var ehx = -bbox_hw + 3; ehx < bbox_hw - 2; ehx += 6) {
-        draw_line(x + ehx, y - bbox_hh + 2, x + ehx + 4, y + bbox_hh - 2);
+    // Ground Contact Shadow
+    draw_set_color(c_black);
+    draw_set_alpha(0.50);
+    draw_ellipse(x - (bbox_hw * 0.9), y + bbox_hh - 2, x + (bbox_hw * 0.9), y + bbox_hh + 2, false);
+    draw_set_alpha(1.0);
+
+    // --- LEGS (Articulated 2-segment with knees) ---
+    var e_hip_l = eh_x - (e_hp_w * 0.7);
+    var e_hip_r = eh_x + (e_hp_w * 0.7);
+    var ek1_x = e_hip_l; var ek1_y = e_hip_y + 8; var ef1_x = e_hip_l; var ef1_y = e_foot_y;
+    var ek2_x = e_hip_r; var ek2_y = e_hip_y + 8; var ef2_x = e_hip_r; var ef2_y = e_foot_y;
+
+    if (state == ESTATE.CHASE) {
+        var e_walk = current_time * 0.012;
+        var ew_sw1 = sin(e_walk) * 11;
+        var ew_sw2 = sin(e_walk + pi) * 11;
+
+        ek1_x = e_hip_l + (ew_sw1 * facing * 0.6);
+        ek1_y = e_hip_y + 8;
+        ef1_x = e_hip_l + (ew_sw1 * facing);
+        ef1_y = e_foot_y;
+
+        ek2_x = e_hip_r + (ew_sw2 * facing * 0.6);
+        ek2_y = e_hip_y + 8;
+        ef2_x = e_hip_r + (ew_sw2 * facing);
+        ef2_y = e_foot_y;
+    } else if (state == ESTATE.STUNNED) {
+        // Buckled, trembling knees
+        var trem = sin(current_time * 0.04) * 2;
+        ek1_x = e_hip_l - 4 + trem; ek1_y = e_hip_y + 10; ef1_x = e_hip_l - 6; ef1_y = e_foot_y;
+        ek2_x = e_hip_r + 4 - trem; ek2_y = e_hip_y + 10; ef2_x = e_hip_r + 6; ef2_y = e_foot_y;
+    } else {
+        // Sinister martial crouch
+        ek1_x = e_hip_l - 3; ek1_y = e_hip_y + 9; ef1_x = e_hip_l - 5; ef1_y = e_foot_y;
+        ek2_x = e_hip_r + 3; ek2_y = e_hip_y + 9; ef2_x = e_hip_r + 5; ef2_y = e_foot_y;
     }
 
     draw_set_color(c_rim);
-    draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, true);
+    draw_line_width(e_hip_l, e_hip_y, ek1_x, ek1_y, 3.0);
+    draw_line_width(ek1_x, ek1_y, ef1_x, ef1_y, 2.5);
+    draw_line_width(e_hip_r, e_hip_y, ek2_x, ek2_y, 3.0);
+    draw_line_width(ek2_x, ek2_y, ef2_x, ef2_y, 2.5);
 
-    // Center core occult sigil / relic
+    draw_set_color(c_body);
+    draw_line_width(e_hip_l, e_hip_y, ek1_x, ek1_y, 1.5);
+    draw_line_width(ek1_x, ek1_y, ef1_x, ef1_y, 1.2);
+    draw_line_width(e_hip_r, e_hip_y, ek2_x, ek2_y, 1.5);
+    draw_line_width(ek2_x, ek2_y, ef2_x, ef2_y, 1.2);
+
     draw_set_color(c_rim);
-    draw_circle(x, y - 2, 3.5, false);
+    draw_circle(ek1_x, ek1_y, 2.0, false);
+    draw_circle(ek2_x, ek2_y, 2.0, false);
 
-    // Occult eye ember
-    var eye_x = x + (facing * (bbox_hw - 4));
-    var eye_y = y - 6;
+    // --- TORSO / SPINE ---
+    // Central Spine
+    draw_set_color(c_rim);
+    draw_line_width(eh_x, e_neck, eh_x, e_hip_y, 3.5);
+    draw_set_color(c_body);
+    draw_line_width(eh_x, e_neck, eh_x, e_hip_y, 1.8);
+
+    // Shoulders
+    draw_set_color(c_rim);
+    draw_line_width(eh_x - e_sh_w, e_sh_y, eh_x + e_sh_w, e_sh_y, 3.0);
+    draw_set_color(c_body);
+    draw_line_width(eh_x - e_sh_w, e_sh_y, eh_x + e_sh_w, e_sh_y, 1.5);
+
+    // Pelvis
+    draw_set_color(c_rim);
+    draw_line_width(eh_x - e_hp_w, e_hip_y, eh_x + e_hp_w, e_hip_y, 2.5);
+
+    // Jagged Rib Barbs
+    var er1 = lerp(e_sh_y, e_hip_y, 0.40);
+    var er2 = lerp(e_sh_y, e_hip_y, 0.70);
+    draw_line_width(eh_x - 5, er1, eh_x + 5, er1, 2.0);
+    draw_line_width(eh_x - 4, er2, eh_x + 4, er2, 2.0);
+
+    // Occult Core Relic at Sternum
+    draw_set_color(c_rim);
+    draw_circle(eh_x, er1, 2.5, false);
+
+    // --- HEAD & HORNS ---
+    draw_set_color(c_body);
+    draw_circle(eh_x, eh_y, eh_r, false);
+    draw_set_color(c_rim);
+    draw_circle(eh_x, eh_y, eh_r, true);
+
+    // Jagged Curved Horns
+    draw_line_width(eh_x - 3, eh_y - eh_r + 2, eh_x - (facing * 4) - 3, eh_y - eh_r - 7, 2.5);
+    draw_line_width(eh_x + 3, eh_y - eh_r + 2, eh_x + (facing * 4) + 3, eh_y - eh_r - 7, 2.5);
+    draw_set_color(c_body);
+    draw_line(eh_x - 3, eh_y - eh_r + 2, eh_x - (facing * 4) - 3, eh_y - eh_r - 7);
+    draw_line(eh_x + 3, eh_y - eh_r + 2, eh_x + (facing * 4) + 3, eh_y - eh_r - 7);
+
+    // Optic Eye Ember
+    var eye_x = eh_x + (facing * 3);
+    var eye_y = eh_y;
     draw_set_color(c_white);
     draw_circle(eye_x, eye_y, 2, false);
+    draw_set_color(c_rim);
+    draw_point(eye_x, eye_y);
+
+    // --- ARMS & JAGGED CLEAVER ---
+    var sh_front = (facing > 0) ? (eh_x + e_sh_w) : (eh_x - e_sh_w);
+    var sh_back  = (facing > 0) ? (eh_x - e_sh_w) : (eh_x + e_sh_w);
+
+    if (state == ESTATE.WINDUP) {
+        // Arms raised menacingly high overhead preparing to strike
+        var wp_hand_x = eh_x + (facing * 4);
+        var wp_hand_y = eh_y - 12;
+        var wp_blade_x = wp_hand_x + (facing * 16);
+        var wp_blade_y = wp_hand_y - 14;
+
+        draw_set_color(c_rim);
+        draw_line_width(sh_front, e_sh_y, wp_hand_x, wp_hand_y, 3.0);
+        draw_line_width(sh_back, e_sh_y, wp_hand_x, wp_hand_y, 3.0);
+
+        // Cleaver blade raised high with warning glow
+        draw_set_color(make_color_rgb(255, 140, 20));
+        draw_line_width(wp_hand_x, wp_hand_y, wp_blade_x, wp_blade_y, 4.5);
+        draw_set_color(c_white);
+        draw_line_width(wp_hand_x, wp_hand_y, wp_blade_x, wp_blade_y, 1.5);
+    } else if (state == ESTATE.ATTACK) {
+        // Lunging cleaver thrust
+        var atk_hand_x = eh_x + (facing * 16);
+        var atk_hand_y = y - 2;
+        var atk_blade_x = atk_hand_x + (facing * 18);
+        var atk_blade_y = atk_hand_y;
+
+        draw_set_color(c_rim);
+        draw_line_width(sh_front, e_sh_y, atk_hand_x, atk_hand_y, 3.0);
+        draw_set_color(make_color_rgb(255, 60, 60));
+        draw_line_width(atk_hand_x, atk_hand_y, atk_blade_x, atk_blade_y, 5.0);
+        draw_set_color(c_white);
+        draw_line_width(atk_hand_x, atk_hand_y, atk_blade_x, atk_blade_y, 1.5);
+    } else if (state == ESTATE.STUNNED) {
+        // Limp drooping arms
+        draw_set_color(c_rim);
+        draw_line_width(sh_front, e_sh_y, sh_front + 2, e_sh_y + 14, 2.5);
+        draw_line_width(sh_back, e_sh_y, sh_back - 2, e_sh_y + 14, 2.5);
+    } else {
+        // Predatory stalking posture holding cleaver
+        var idl_elbow_x = sh_front + (facing * 6);
+        var idl_elbow_y = e_sh_y + 6;
+        var idl_hand_x  = sh_front + (facing * 10);
+        var idl_hand_y  = y - 2;
+        var idl_tip_x   = idl_hand_x + (facing * 12);
+        var idl_tip_y   = idl_hand_y - 8;
+
+        draw_set_color(c_rim);
+        draw_line_width(sh_front, e_sh_y, idl_elbow_x, idl_elbow_y, 2.5);
+        draw_line_width(idl_elbow_x, idl_elbow_y, idl_hand_x, idl_hand_y, 2.5);
+
+        // Dark iron cleaver
+        draw_set_color(make_color_rgb(18, 14, 20));
+        draw_line_width(idl_hand_x, idl_hand_y, idl_tip_x, idl_tip_y, 4.0);
+        draw_set_color(c_rim);
+        draw_line_width(idl_hand_x, idl_hand_y, idl_tip_x, idl_tip_y, 1.5);
+    }
 }
 
 // 2. Windup Telegraph Indicator (Crucial Parry Cue!)
