@@ -32,6 +32,19 @@ function hitbox_spawn(owner_inst, team, xpos, ypos, width, height, damage, kb_x,
     return hb;
 }
 
+/// Retrieves the decoupled combat hurtbox of an entity
+function entity_get_hurtbox(inst) {
+    if (!qz_entity_exists(inst)) return { x1: 0, y1: 0, x2: 0, y2: 0 };
+    var hw = qz_var_exists(inst, "hurtbox_hw") ? inst.hurtbox_hw : (qz_var_exists(inst, "bbox_hw") ? inst.bbox_hw + 2 : 16);
+    var hh = qz_var_exists(inst, "hurtbox_hh") ? inst.hurtbox_hh : (qz_var_exists(inst, "bbox_hh") ? inst.bbox_hh + 2 : 24);
+    return {
+        x1: inst.x - hw,
+        y1: inst.y - hh,
+        x2: inst.x + hw,
+        y2: inst.y + hh
+    };
+}
+
 /// Evaluates hit resolution between a hitbox and a hurtbox entity.
 function combat_resolve_hit(hb, target) {
     if (!qz_entity_exists(hb) || !qz_entity_exists(target)) return false;
@@ -137,9 +150,12 @@ function combat_resolve_hit(hb, target) {
         }
     }
 
-    // Hitstop
+    // Hitstop & Attacker Kinetic Resistance
     var hb_hitstop = qz_var_exists(hb, "hitstop") ? hb.hitstop : 0.05;
     time_hitstop(hb_hitstop);
+    if (qz_entity_exists(hb.owner) && qz_var_exists(hb.owner, "vx")) {
+        hb.owner.vx *= 0.55;
+    }
 
     // Attacker rewards (combo, energy)
     if (qz_entity_exists(hb.owner)) {

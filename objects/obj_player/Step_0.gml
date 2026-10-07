@@ -73,6 +73,7 @@ if (cur_pow != undefined) {
 if (on_ground) {
     coyote_timer = pcfg.coyote_time;
     air_dashes_left = stat_mods.evaluate("air_dashes", pcfg.air_dashes);
+    air_jumps_left = stat_mods.evaluate("air_jumps", variable_struct_exists(pcfg, "max_air_jumps") ? pcfg.max_air_jumps : 1);
 } else {
     coyote_timer = max(0, coyote_timer - dt);
 }
@@ -125,22 +126,6 @@ switch (state) {
             vx = qz_approach(vx, 0, decel * dt);
         }
 
-        // Jump execution
-        if (jump_buffer_timer > 0 && coyote_timer > 0) {
-            jump_buffer_timer = 0;
-            coyote_timer = 0;
-            vy = -pcfg.jump_speed;
-            state = PSTATE.JUMP;
-            squash_x = 0.75;
-            squash_y = 1.35;
-            events_emit(EVT.JUMP, { player: id, x: x, y: y + bbox_hh });
-        }
-
-        // Variable jump cut
-        if (state == PSTATE.JUMP && !input_check(ACTION.JUMP) && vy < 0) {
-            vy *= pcfg.jump_cut;
-        }
-
         // Wall-Tech: slide & jump
         var wall_dir = interaction_apply_wall_slide(id, dt);
         if (wall_dir != 0 && jump_buffer_timer > 0) {
@@ -149,6 +134,34 @@ switch (state) {
             state = PSTATE.JUMP;
             squash_x = 0.8;
             squash_y = 1.3;
+            // Wall-jump restores air jump for fluid vertical acrobatic chaining
+            air_jumps_left = stat_mods.evaluate("air_jumps", variable_struct_exists(pcfg, "max_air_jumps") ? pcfg.max_air_jumps : 1);
+        } else if (jump_buffer_timer > 0) {
+            if (coyote_timer > 0) {
+                // Ground / Coyote Primary Jump
+                jump_buffer_timer = 0;
+                coyote_timer = 0;
+                vy = -pcfg.jump_speed;
+                state = PSTATE.JUMP;
+                squash_x = 0.75;
+                squash_y = 1.35;
+                events_emit(EVT.JUMP, { player: id, x: x, y: y + bbox_hh, double_jump: false });
+            } else if (!on_ground && air_jumps_left > 0) {
+                // Secondary Air Double Jump
+                jump_buffer_timer = 0;
+                air_jumps_left--;
+                var dj_spd = variable_struct_exists(pcfg, "double_jump_speed") ? pcfg.double_jump_speed : (pcfg.jump_speed * 0.9);
+                vy = -dj_spd;
+                state = PSTATE.JUMP;
+                squash_x = 0.70;
+                squash_y = 1.45;
+                events_emit(EVT.JUMP, { player: id, x: x, y: y + bbox_hh, double_jump: true });
+            }
+        }
+
+        // Variable jump cut
+        if (state == PSTATE.JUMP && !input_check(ACTION.JUMP) && vy < 0) {
+            vy *= pcfg.jump_cut;
         }
 
         // Dash trigger
@@ -225,6 +238,31 @@ switch (state) {
         dash_timer -= dt;
         vx = dash_dir_x * pcfg.dash_speed;
         vy = dash_dir_y * pcfg.dash_speed;
+
+        // Responsive attack cancel during dash for aggressive momentum chaining
+        if (input_check_pressed(ACTION.ATTACK)) {
+            state = PSTATE.ATTACK;
+            attack_phase = "windup";
+            attack_step = (combo_count) mod array_length(ccfg.chain);
+            attack_phase_timer = ccfg.chain[attack_step].windup;
+            dash_timer = 0;
+            events_emit(EVT.PLAYER_ATTACK, { player: id, step: attack_step, charged: false });
+            break;
+        }
+
+        // Jump cancel during grounded dash (Wave-dash)
+        if (on_ground && input_check_pressed(ACTION.JUMP)) {
+            jump_buffer_timer = 0;
+            coyote_timer = 0;
+            vy = -pcfg.jump_speed;
+            state = PSTATE.JUMP;
+            dash_timer = 0;
+            squash_x = 0.75;
+            squash_y = 1.35;
+            events_emit(EVT.JUMP, { player: id, x: x, y: y + bbox_hh, double_jump: false });
+            break;
+        }
+
         if (dash_timer <= 0) {
             vx *= pcfg.dash_exit_mult;
             vy *= pcfg.dash_exit_mult;
@@ -328,6 +366,24 @@ switch (state) {
 
     case PSTATE.HOOK:
         // Movement is handled by grapple spring & physics
+        // Dash cancellation out of grapple
+        if (input_check_pressed(ACTION.DASH) && dash_cd.ready()) {
+            grapple.release(false);
+            if (on_ground || air_dashes_left > 0) {
+                if (!on_ground) air_dashes_left--;
+                dash_cd.start(stat_mods.evaluate("dash_cd_mult", 1.0));
+                state = PSTATE.DASH;
+                dash_timer = pcfg.dash_time;
+                iframes = pcfg.dash_time + pcfg.dash_iframes_extra;
+                var ax = input_axis_x();
+                var ay = input_axis_y();
+                if (ax == 0 && ay == 0) ax = facing;
+                var dlen = point_distance(0, 0, ax, ay);
+                dash_dir_x = ax / dlen;
+                dash_dir_y = ay / dlen;
+                events_emit(EVT.DASH, { player: id, dir_x: dash_dir_x, dir_y: dash_dir_y });
+            }
+        }
         break;
 }
 
@@ -385,5 +441,16 @@ if (state == PSTATE.DASH || (overdrive_active && (abs(vx) > 100 || abs(vy) > 100
         ai_spawn.alpha = 0.65;
         ai_spawn.color = overdrive_active ? c_yellow : (active_element != ELEMENT.NONE ? c_orange : c_aqua);
     }
+}
+
+// 12. Sacred Brutalism Talisman Ribbon Physics Simulation
+var tr_target_x = x - (facing * (bbox_hw * 0.4));
+var tr_target_y = y - (bbox_hh * 0.3);
+for (var tr = 0; tr < 4; tr++) {
+    var lead_x = (tr == 0) ? tr_target_x : talisman_ribbons[tr - 1].x;
+    var lead_y = (tr == 0) ? tr_target_y : talisman_ribbons[tr - 1].y;
+    // Trailing lag influenced by player velocity and gravity
+    talisman_ribbons[tr].x = lerp(talisman_ribbons[tr].x, lead_x - (vx * dt * 0.18), 0.40);
+    talisman_ribbons[tr].y = lerp(talisman_ribbons[tr].y, lead_y + 3 - (vy * dt * 0.15), 0.40);
 }
 

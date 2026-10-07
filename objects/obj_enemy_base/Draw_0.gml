@@ -22,18 +22,25 @@ if (is_callable(draw_body_fn)) {
 } else {
     draw_set_color(c_body);
     draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, false);
+
+    // Woodcut diagonal etch hatchings on enemy effigy
+    draw_set_color(make_color_rgb(18, 14, 18));
+    for (var ehx = -bbox_hw + 3; ehx < bbox_hw - 2; ehx += 6) {
+        draw_line(x + ehx, y - bbox_hh + 2, x + ehx + 4, y + bbox_hh - 2);
+    }
+
     draw_set_color(c_rim);
     draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, true);
 
-    // Center core reactor
+    // Center core occult sigil / relic
     draw_set_color(c_rim);
-    draw_circle(x, y - 2, 4, false);
+    draw_circle(x, y - 2, 3.5, false);
 
-    // Sensor eye
+    // Occult eye ember
     var eye_x = x + (facing * (bbox_hw - 4));
     var eye_y = y - 6;
     draw_set_color(c_white);
-    draw_circle(eye_x, eye_y, 2.5, false);
+    draw_circle(eye_x, eye_y, 2, false);
 }
 
 // 2. Windup Telegraph Indicator (Crucial Parry Cue!)

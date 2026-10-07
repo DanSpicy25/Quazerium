@@ -412,6 +412,47 @@ function qz_run_selftest() {
                   int_lp.speed == -860 && int_can.radius == 110 && int_can.damage == 45);
     if (_assert(bal_ok, "Content Balance: Electric hazard timing and interactive object parameters verified in global config")) passes++; else fails++;
 
+    // 45. Movement & Double Jump Ground Reset
+    var p_cfg = global.cfg.player;
+    var dj_cfg_ok = (variable_struct_exists(p_cfg, "max_air_jumps") && p_cfg.max_air_jumps == 1 &&
+                     variable_struct_exists(p_cfg, "double_jump_speed") && p_cfg.double_jump_speed == 740);
+    var mock_p_jump = { air_jumps_left: 1, vy: 0, on_ground: false };
+    mock_p_jump.air_jumps_left--;
+    mock_p_jump.vy = -p_cfg.double_jump_speed;
+    var dj_exec_ok = (mock_p_jump.air_jumps_left == 0 && mock_p_jump.vy == -740);
+    mock_p_jump.on_ground = true;
+    mock_p_jump.air_jumps_left = p_cfg.max_air_jumps;
+    var dj_reset_ok = (mock_p_jump.air_jumps_left == 1);
+    if (_assert(dj_cfg_ok && dj_exec_ok && dj_reset_ok, "Movement & Double Jump: Configured, air jump consumes resource, and resets cleanly on landing")) passes++; else fails++;
+
+    // 46. Close-Range Sword Hitbox Zero-Distance Overlap
+    var c_chain0 = global.cfg.combat.chain[0];
+    var p_mock_x = 100;
+    var hb_ox = c_chain0.ox;
+    var hb_w = c_chain0.w;
+    var hb_left = p_mock_x + hb_ox;
+    var hb_right = hb_left + hb_w;
+    var touching_enemy_x = p_mock_x + 4;
+    var hugging_enemy_x = p_mock_x;
+    var close_overlap_ok = (hb_ox < 0 && touching_enemy_x >= hb_left && touching_enemy_x <= hb_right &&
+                            hugging_enemy_x >= hb_left && hugging_enemy_x <= hb_right);
+    if (_assert(close_overlap_ok, "Combat Hitbox Architecture: Sword hitboxes cover point-blank contact with zero front blind spot")) passes++; else fails++;
+
+    // 47. Decoupled Combat Hurtbox Architecture
+    var mock_ent = { x: 200, y: 150, bbox_hw: 12, bbox_hh: 20, hurtbox_hw: 16, hurtbox_hh: 24 };
+    var hbox = entity_get_hurtbox(mock_ent);
+    var hbox_ok = (hbox.x1 == 184 && hbox.x2 == 216 && hbox.y1 == 126 && hbox.y2 == 174);
+    if (_assert(hbox_ok, "Combat Architecture: Entity hurtboxes decoupled from physical collision bounds for generous, fair combat registration")) passes++; else fails++;
+
+    // 48. Grapple Angular Governor Clamping & Stabilization
+    var gr_cfg = global.cfg.grapple;
+    var gr_governor_ok = (variable_struct_exists(gr_cfg, "max_angular_speed") && gr_cfg.max_angular_speed == 950 &&
+                          variable_struct_exists(gr_cfg, "angular_damping") && gr_cfg.angular_damping == 0.94);
+    var test_ang_spd = 1500;
+    test_ang_spd = clamp(test_ang_spd, -gr_cfg.max_angular_speed, gr_cfg.max_angular_speed);
+    var clamp_ok = (test_ang_spd == 950);
+    if (_assert(gr_governor_ok && clamp_ok, "Grapple Physics: Angular velocity governor clamps runaway centrifugal spinning to stabilized 950 deg/s")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

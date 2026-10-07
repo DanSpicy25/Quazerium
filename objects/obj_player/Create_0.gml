@@ -16,14 +16,17 @@ facing = 1;
 
 bbox_hw = cfg.hw;
 bbox_hh = cfg.hh;
+hurtbox_hw = bbox_hw + 2; // Decoupled combat hurtbox
+hurtbox_hh = bbox_hh + 2;
 on_ground = false;
 on_ceiling = false;
 on_wall_left = false;
 on_wall_right = false;
 
-// Coyote Time & Jump Buffer
+// Coyote Time, Jump Buffer & Double Jump
 coyote_timer = 0;
 jump_buffer_timer = 0;
+air_jumps_left = variable_struct_exists(cfg, "max_air_jumps") ? cfg.max_air_jumps : 1;
 
 // Dash
 dash_timer = 0;
@@ -89,4 +92,10 @@ for (var a = 0; a < 6; a++) {
     afterimages[a] = { active: false, x: 0, y: 0, facing: 1, alpha: 0, color: c_aqua };
 }
 afterimage_head = 0;
+
+// Visual Presentation: Sacred Brutalism Talisman Streamer Ribbons
+talisman_ribbons = array_create(4);
+for (var tr = 0; tr < 4; tr++) {
+    talisman_ribbons[tr] = { x: x, y: y };
+}
 

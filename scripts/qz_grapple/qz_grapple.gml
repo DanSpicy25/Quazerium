@@ -140,32 +140,62 @@ function GrappleController(player_inst) constructor {
                 current_len = point_distance(player.x, player.y, hook_x, hook_y);
                 var rope_dir = point_direction(player.x, player.y, hook_x, hook_y);
 
-                // Spring physics: F = -k*x - c*v
+                // 1. Radial spring physics: F = -k*x - c*v (Tension along the rope)
                 var stretch = current_len - rest_len;
+                var cos_r = lengthdir_x(1, rope_dir);
+                var sin_r = lengthdir_y(1, rope_dir);
+                var v_radial = (player.vx * cos_r) + (player.vy * sin_r);
+
                 if (stretch > 0) {
-                    // Velocity projection along rope axis
-                    var v_proj = (player.vx * lengthdir_x(1, rope_dir)) + (player.vy * lengthdir_y(1, rope_dir));
-                    var spring_f = (cfg.stiffness * stretch) + (cfg.damping * v_proj);
+                    var spring_f = (cfg.stiffness * stretch) + (cfg.damping * v_radial);
+                    player.vx += cos_r * spring_f * dt;
+                    player.vy += sin_r * spring_f * dt;
 
-                    player.vx += lengthdir_x(spring_f * dt, rope_dir);
-                    player.vy += lengthdir_y(spring_f * dt, rope_dir);
-
-                    // Hard stretch constraint
+                    // Hard stretch constraint to prevent rope separation
                     var max_allowed = rest_len * cfg.max_stretch;
                     if (current_len > max_allowed) {
                         current_len = max_allowed;
                     }
                 }
 
-                // Player swing control
+                // 2. Physics-Assisted Tangential Control & Anti-Spin Governor
+                // Tangential unit vector (perpendicular to rope)
+                var cos_t = -sin_r; // lengthdir_x(1, rope_dir + 90)
+                var sin_t = cos_r;  // lengthdir_y(1, rope_dir + 90)
+                var v_tangential = (player.vx * cos_t) + (player.vy * sin_t);
+
                 var inp_x = input_axis_x();
+                var max_ang = variable_struct_exists(cfg, "max_angular_speed") ? cfg.max_angular_speed : 950;
+                var ang_damp = variable_struct_exists(cfg, "angular_damping") ? cfg.angular_damping : 0.94;
+
                 if (inp_x != 0) {
-                    var perp_dir = rope_dir + (inp_x > 0 ? 90 : -90);
-                    player.vx += lengthdir_x(cfg.swing_accel * dt, perp_dir);
-                    player.vy += lengthdir_y(cfg.swing_accel * dt, perp_dir);
+                    // Assist in the player's intended horizontal swing direction
+                    var desired_sign = (cos_t * inp_x >= 0) ? 1 : -1;
+                    if (sign(v_tangential) == desired_sign || abs(v_tangential) < 60) {
+                        v_tangential += desired_sign * cfg.swing_accel * dt;
+                    } else {
+                        // Active counter-braking when player pushes against swing
+                        v_tangential = qz_approach(v_tangential, desired_sign * 100, (cfg.swing_accel * 1.8) * dt);
+                    }
+                } else {
+                    // Natural pendulum stabilization damping when no input
+                    v_tangential *= ang_damp;
                 }
 
-                // Reel in
+                // Anti-orbital governor: Strictly clamp tangential velocity to prevent runaway spin
+                v_tangential = clamp(v_tangential, -max_ang, max_ang);
+
+                // Anti-loop over the top: softly dissipate vertical lift when swinging above the anchor pin
+                if (player.y < hook_y - 12 && player.vy < 0) {
+                    player.vy = qz_approach(player.vy, 0, 1800 * dt);
+                }
+
+                // Reconstruct velocity from governed radial and tangential components
+                var v_rad_cur = (player.vx * cos_r) + (player.vy * sin_r);
+                player.vx = (cos_r * v_rad_cur) + (cos_t * v_tangential);
+                player.vy = (sin_r * v_rad_cur) + (sin_t * v_tangential);
+
+                // 3. Reel in
                 if (input_check(ACTION.GRAPPLE) || input_check(ACTION.MOVE_UP)) {
                     rest_len = max(cfg.min_length, rest_len - (cfg.reel_speed * dt));
                 }

@@ -11,9 +11,9 @@ function qz_config_init() {
         player: {
             hw: 12, hh: 22, max_hp: 100,
             run_speed: 330, ground_accel: 4200, ground_decel: 5200, air_accel: 2600, air_decel: 1400, turn_mult: 1.6,
-            jump_speed: 820, jump_cut: 0.45, coyote_time: 0.1, jump_buffer: 0.12,
+            jump_speed: 820, double_jump_speed: 740, max_air_jumps: 1, jump_cut: 0.45, coyote_time: 0.12, jump_buffer: 0.12,
             fall_gravity_mult: 1.55, apex_threshold: 90, apex_gravity_mult: 0.55,
-            dash_speed: 980, dash_time: 0.14, dash_cooldown: 0.45, dash_exit_mult: 0.45,
+            dash_speed: 980, dash_time: 0.14, dash_cooldown: 0.40, dash_exit_mult: 0.50,
             dash_iframes_extra: 0.04, air_dashes: 1, dash_buffer: 0.1,
             slam_hang: 0.06, slam_speed: 1500, slam_recover: 0.14, slam_radius: 90, slam_damage: 14, slam_knockback: 520,
             hurt_iframes: 0.5, hitstun: 0.18,
@@ -23,12 +23,13 @@ function qz_config_init() {
         combat: {
             attack_buffer: 0.15, chain_window: 0.3,
             // Attack chain (combo strings). Frame-based authoring: use time_frames_to_seconds(n).
+            // Hitbox coordinates ox are measured from character center: -8 means starting 8px behind center to cover hugging targets
             chain: [
-                { damage: 8,  windup: 0.05, active: 0.08, recover: 0.14, w: 52, h: 34, ox: 30, oy: -2, kb: 240, kb_up: 60,  hitstop: 0.04, lunge: 120 },
-                { damage: 10, windup: 0.05, active: 0.08, recover: 0.16, w: 56, h: 36, ox: 32, oy: -2, kb: 280, kb_up: 80,  hitstop: 0.045, lunge: 140 },
-                { damage: 14, windup: 0.07, active: 0.10, recover: 0.24, w: 64, h: 40, ox: 34, oy: -4, kb: 420, kb_up: 180, hitstop: 0.07, lunge: 180 },
+                { damage: 8,  windup: 0.05, active: 0.08, recover: 0.14, w: 64, h: 42, ox: -8,  oy: -2, kb: 240, kb_up: 60,  hitstop: 0.04, lunge: 110 },
+                { damage: 10, windup: 0.05, active: 0.08, recover: 0.16, w: 70, h: 44, ox: -10, oy: -2, kb: 280, kb_up: 80,  hitstop: 0.045, lunge: 130 },
+                { damage: 14, windup: 0.07, active: 0.10, recover: 0.24, w: 80, h: 50, ox: -10, oy: -4, kb: 420, kb_up: 180, hitstop: 0.07, lunge: 160 },
             ],
-            charged: { damage: 20, windup: 0.06, active: 0.12, recover: 0.25, w: 80, h: 48, ox: 40, oy: -4, kb: 640, kb_up: 240, hitstop: 0.09, lunge: 260 },
+            charged: { damage: 22, windup: 0.06, active: 0.12, recover: 0.25, w: 96, h: 56, ox: -12, oy: -4, kb: 640, kb_up: 240, hitstop: 0.09, lunge: 220 },
             charge_time: 0.45, charge_move_mult: 0.35,
             combo_window: 1.2, combo_step: 0.05, combo_cap: 20,
             energy_per_hit: 4, energy_per_charged_hit: 10,
@@ -45,11 +46,12 @@ function qz_config_init() {
             requires_facing: false,
         },
 
-        // Rope: F = -k*x - c*v (tension only) + hard stretch limit for stability.
+        // Rope: Physics-assisted player control + angular damping to prevent wild spinning
         grapple: {
-            range: 380, cone_deg: 40, hook_speed: 2400, stiffness: 180, damping: 12,
-            min_length: 36, reel_speed: 420, max_stretch: 1.12, swing_accel: 900,
-            sling_boost: 1.15, sling_up: 380, zip_speed: 900, fire_buffer: 0.1,
+            range: 380, cone_deg: 40, hook_speed: 2400, stiffness: 220, damping: 18,
+            min_length: 40, reel_speed: 460, max_stretch: 1.10, swing_accel: 850,
+            max_angular_speed: 950, angular_damping: 0.94, tangential_assist: 1.25,
+            sling_boost: 1.15, sling_up: 420, zip_speed: 920, fire_buffer: 0.1,
             enemy_hook_enabled: true, enemy_zip_speed: 980, enemy_tackle_damage: 8,
             enemy_tackle_stun: 0.45, enemy_tackle_rebound: -360,
         },

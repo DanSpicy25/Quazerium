@@ -21,10 +21,12 @@ if (instance_exists(obj_player)) {
     target_x = p.x + lookahead_x;
     target_y = p.y + cfg.offset_y + target_look_y;
 
-    // Cinematic grapple framing bias when attached
-    if (p.state == PSTATE.HOOK && instance_exists(p.grapple)) {
-        target_x = lerp(target_x, p.grapple.hook_x, 0.22);
-        target_y = lerp(target_y, p.grapple.hook_y, 0.22);
+    // Smooth grapple momentum framing (smoothly leads in the swing direction without fighting the player)
+    if (p.state == PSTATE.HOOK) {
+        var swing_bias_x = clamp(p.vx * 0.10, -60, 60);
+        var swing_bias_y = clamp(p.vy * 0.08, -40, 60);
+        target_x = p.x + swing_bias_x;
+        target_y = p.y + cfg.offset_y + swing_bias_y;
     }
 
     // Follow smoothing (freeze if configured during hitstop)
