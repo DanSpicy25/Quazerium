@@ -13,7 +13,7 @@ function combat_calculate_damage(base_dmg, overdrive_mult, combo_count, reaction
 }
 
 /// Creates a combat hitbox.
-function hitbox_spawn(owner_inst, team, xpos, ypos, width, height, damage, kb_x, kb_y, hitstop, element = ELEMENT.NONE, can_parry = true, duration = 0.08) {
+function hitbox_spawn(owner_inst, team, xpos, ypos, width, height, damage, kb_x, kb_y, hitstop, element = ELEMENT.NONE, can_parry = true, duration = 0.08, startup = 0) {
     var hb = instance_create_layer(xpos, ypos, "Instances", obj_hitbox);
     hb.owner = owner_inst;
     hb.team = team;
@@ -26,7 +26,8 @@ function hitbox_spawn(owner_inst, team, xpos, ypos, width, height, damage, kb_x,
     hb.element = element;
     hb.can_be_parried = can_parry;
     hb.duration = duration;
-    hb.timer = duration;
+    hb.timer = duration + startup;
+    hb.startup = startup;
     hb.hit_targets = [];
     return hb;
 }

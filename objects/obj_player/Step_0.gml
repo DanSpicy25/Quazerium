@@ -208,7 +208,7 @@ switch (state) {
             is_parrying = true;
             parry_timer = 0;
             vx *= 0.2;
-            events_emit(EVT.PARRY, id);
+            events_emit(EVT.PARRY, { defender: id, attacker: noone, hitbox: noone });
         }
 
         // State update based on physics
@@ -277,6 +277,37 @@ switch (state) {
                 attack_phase_timer = atk_spec.recover;
             }
         } else if (attack_phase == "recover") {
+            // Cancel recovery with Dash
+            if (ccfg.cancel_recover_with_dash && input_check_pressed(ACTION.DASH) && dash_cd.ready()) {
+                if (on_ground || air_dashes_left > 0) {
+                    if (!on_ground) air_dashes_left--;
+                    dash_cd.start(stat_mods.evaluate("dash_cd_mult", 1.0));
+                    state = PSTATE.DASH;
+                    dash_timer = pcfg.dash_time;
+                    iframes = pcfg.dash_time + pcfg.dash_iframes_extra;
+                    var ax = input_axis_x();
+                    var ay = input_axis_y();
+                    if (ax == 0 && ay == 0) ax = facing;
+                    var dlen = point_distance(0, 0, ax, ay);
+                    dash_dir_x = ax / dlen;
+                    dash_dir_y = ay / dlen;
+                    attack_phase = "none";
+                    events_emit(EVT.DASH, { player: id, dir_x: dash_dir_x, dir_y: dash_dir_y });
+                    break;
+                }
+            }
+
+            // Cancel recovery with Parry
+            if (ccfg.cancel_recover_with_parry && input_check_pressed(ACTION.PARRY)) {
+                state = PSTATE.PARRY;
+                is_parrying = true;
+                parry_timer = 0;
+                vx *= 0.2;
+                attack_phase = "none";
+                events_emit(EVT.PARRY, { defender: id, attacker: noone, hitbox: noone });
+                break;
+            }
+
             vx = qz_approach(vx, 0, 3000 * dt);
             if (attack_phase_timer <= 0) {
                 state = on_ground ? PSTATE.IDLE : PSTATE.FALL;

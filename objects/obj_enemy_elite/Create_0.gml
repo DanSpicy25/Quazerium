@@ -28,16 +28,22 @@ hitstop_val = cfg.hitstop;
 score_val = cfg.score;
 kb_resist = cfg.kb_resist;
 
-// Two-hit blade strike
+// Two-hit blade strike: Staggered double slash rhythm
 attack_execute_fn = function() {
     var ox = (facing > 0) ? x + 10 : x - 10 - atk_w_val;
-    // Hitbox 1: Cross slash
+    // Hitbox 1: Cross slash (Immediate primary strike)
     hitbox_spawn(id, TEAM.ENEMY, ox, y - 16, atk_w_val, atk_h_val,
-                 damage_val, kb_val * facing, -kb_up_val,
-                 hitstop_val, element_status, true, attack_timer);
+                 damage_val * 0.6, kb_val * 0.5 * facing, -kb_up_val * 0.5,
+                 hitstop_val, element_status, true, 0.08, 0);
 
     // Forward kinetic surge
     vx = facing * 320;
+
+    // Hitbox 2: Twin Saber Upper Strike (120ms delayed secondary strike for parry/dash cadence)
+    var ox2 = (facing > 0) ? x + 16 : x - 16 - (atk_w_val * 1.1);
+    hitbox_spawn(id, TEAM.ENEMY, ox2, y - 22, atk_w_val * 1.1, atk_h_val * 1.2,
+                 damage_val * 0.8, kb_val * facing, -kb_up_val * 1.2,
+                 hitstop_val * 1.2, element_status, true, 0.10, 0.12);
 };
 
 draw_body_fn = function(c_body, c_rim) {

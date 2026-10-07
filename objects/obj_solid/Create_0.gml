@@ -11,8 +11,8 @@ if (image_xscale == 1 && image_yscale == 1) {
     h = 32 * image_yscale;
 }
 
-bbox_left = x;
-bbox_top = y;
-bbox_right = x + w;
-bbox_bottom = y + h;
+solid_x1 = x;
+solid_y1 = y;
+solid_x2 = x + w;
+solid_y2 = y + h;
 

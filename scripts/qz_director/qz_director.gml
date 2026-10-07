@@ -115,7 +115,8 @@ function director_start_encounter(idx) {
     d.encounter_time = 0;
     d.encounter_score = 0;
     d.state = ENCOUNTER_STATE.INTRO;
-    d.state_timer = 2.0; // 2 seconds banner
+    var intro_dur = (variable_struct_exists(global, "cfg") && variable_struct_exists(global.cfg, "director")) ? global.cfg.director.intro_duration : 1.2;
+    d.state_timer = intro_dur;
 
     events_emit(EVT.ENCOUNTER_START, {
         index: d.current_encounter_idx,
@@ -224,7 +225,8 @@ function director_update(dt) {
                 } else {
                     // Encounter Cleared!
                     d.state = ENCOUNTER_STATE.CLEAR;
-                    d.state_timer = 2.5;
+                    var clear_dur = (variable_struct_exists(global, "cfg") && variable_struct_exists(global.cfg, "director")) ? global.cfg.director.clear_duration : 1.4;
+                    d.state_timer = clear_dur;
                     events_emit(EVT.ENCOUNTER_CLEAR, {
                         index: d.current_encounter_idx,
                         score: d.encounter_score,

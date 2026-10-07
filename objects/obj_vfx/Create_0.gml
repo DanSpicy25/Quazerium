@@ -27,17 +27,55 @@ events_subscribe(EVT.QUALITY_CHANGED, function(evt, data) {
     decal_pool.set_budget(prof.max_decals);
 }, id);
 
+vfx_get_x = function(val, fallback = 0) {
+    if (fallback == 0 && instance_exists(obj_player)) fallback = obj_player.x;
+    if (is_undefined(val) || val == noone) return fallback;
+    if (is_struct(val)) {
+        if (variable_struct_exists(val, "x")) return val.x;
+        if (variable_struct_exists(val, "anchor_x")) return val.anchor_x;
+        if (variable_struct_exists(val, "defender")) return vfx_get_x(val.defender, fallback);
+        if (variable_struct_exists(val, "target")) return vfx_get_x(val.target, fallback);
+        if (variable_struct_exists(val, "player")) return vfx_get_x(val.player, fallback);
+        if (variable_struct_exists(val, "victim")) return vfx_get_x(val.victim, fallback);
+        if (variable_struct_exists(val, "attacker")) return vfx_get_x(val.attacker, fallback);
+        if (variable_struct_exists(val, "anchor")) return vfx_get_x(val.anchor, fallback);
+        return fallback;
+    }
+    if (!is_struct(val) && instance_exists(val)) return val.x;
+    return fallback;
+};
+
+vfx_get_y = function(val, fallback = 0) {
+    if (fallback == 0 && instance_exists(obj_player)) fallback = obj_player.y;
+    if (is_undefined(val) || val == noone) return fallback;
+    if (is_struct(val)) {
+        if (variable_struct_exists(val, "y")) return val.y;
+        if (variable_struct_exists(val, "anchor_y")) return val.anchor_y;
+        if (variable_struct_exists(val, "defender")) return vfx_get_y(val.defender, fallback);
+        if (variable_struct_exists(val, "target")) return vfx_get_y(val.target, fallback);
+        if (variable_struct_exists(val, "player")) return vfx_get_y(val.player, fallback);
+        if (variable_struct_exists(val, "victim")) return vfx_get_y(val.victim, fallback);
+        if (variable_struct_exists(val, "attacker")) return vfx_get_y(val.attacker, fallback);
+        if (variable_struct_exists(val, "anchor")) return vfx_get_y(val.anchor, fallback);
+        return fallback;
+    }
+    if (!is_struct(val) && instance_exists(val)) return val.y;
+    return fallback;
+};
+
 // ---------------------------------------------------------------------
 // 1. HIT CONFIRMED (Normal Combat Hit)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.HIT_CONFIRMED, function(evt, data) {
-    var tx = (is_struct(data.target) || instance_exists(data.target)) ? data.target.x : x;
-    var ty = (is_struct(data.target) || instance_exists(data.target)) ? data.target.y : y;
-    var ax = (is_struct(data.attacker) || instance_exists(data.attacker)) ? data.attacker.x : tx - 20;
-    var ay = (is_struct(data.attacker) || instance_exists(data.attacker)) ? data.attacker.y : ty;
+    var has_target = is_struct(data) && variable_struct_exists(data, "target") && !is_undefined(data.target) && data.target != noone;
+    var tx = has_target ? vfx_get_x(data.target) : vfx_get_x(data);
+    var ty = has_target ? vfx_get_y(data.target) : vfx_get_y(data);
+    var has_attacker = is_struct(data) && variable_struct_exists(data, "attacker") && !is_undefined(data.attacker) && data.attacker != noone;
+    var ax = has_attacker ? vfx_get_x(data.attacker, tx - 20) : tx - 20;
+    var ay = has_attacker ? vfx_get_y(data.attacker, ty) : ty;
 
     // Visual hit flash on target entity
-    if (qz_entity_exists(data.target) && qz_var_exists(data.target, "hit_flash")) {
+    if (has_target && !is_struct(data.target) && instance_exists(data.target) && variable_instance_exists(data.target, "hit_flash")) {
         data.target.hit_flash = 0.08;
     }
 
@@ -65,16 +103,20 @@ events_subscribe(EVT.HIT_CONFIRMED, function(evt, data) {
     }
 
     // Floating Damage Number (clean white/silver)
-    text_pool.spawn(tx, ty, data.damage, c_white, 1.0, 0.7);
+    var dmg = (is_struct(data) && variable_struct_exists(data, "damage")) ? data.damage : 0;
+    if (dmg > 0) {
+        text_pool.spawn(tx, ty, dmg, c_white, 1.0, 0.7);
+    }
 
     // Elemental Infusion Sparks if element is active
-    if (data.element != ELEMENT.NONE) {
+    var elem = (is_struct(data) && variable_struct_exists(data, "element")) ? data.element : ELEMENT.NONE;
+    if (elem != ELEMENT.NONE) {
         var c_elem1 = c_white;
         var c_elem2 = c_white;
         var shp = VFX_SHAPE.POINT;
         var elem_ay = 0;
 
-        switch (data.element) {
+        switch (elem) {
             case ELEMENT.FIRE:
                 c_elem1 = make_color_rgb(255, 120, 20);
                 c_elem2 = c_red;
@@ -115,13 +157,15 @@ events_subscribe(EVT.HIT_CONFIRMED, function(evt, data) {
 // 2. HIT CRITICAL (Overdrive Hit / High Power Reaction)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.HIT_CRITICAL, function(evt, data) {
-    var tx = (is_struct(data.target) || instance_exists(data.target)) ? data.target.x : x;
-    var ty = (is_struct(data.target) || instance_exists(data.target)) ? data.target.y : y;
-    var ax = (is_struct(data.attacker) || instance_exists(data.attacker)) ? data.attacker.x : tx - 20;
-    var ay = (is_struct(data.attacker) || instance_exists(data.attacker)) ? data.attacker.y : ty;
+    var has_target = is_struct(data) && variable_struct_exists(data, "target") && !is_undefined(data.target) && data.target != noone;
+    var tx = has_target ? vfx_get_x(data.target) : vfx_get_x(data);
+    var ty = has_target ? vfx_get_y(data.target) : vfx_get_y(data);
+    var has_attacker = is_struct(data) && variable_struct_exists(data, "attacker") && !is_undefined(data.attacker) && data.attacker != noone;
+    var ax = has_attacker ? vfx_get_x(data.attacker, tx - 20) : tx - 20;
+    var ay = has_attacker ? vfx_get_y(data.attacker, ty) : ty;
 
     // Visual hit flash on target entity (intense)
-    if (qz_entity_exists(data.target) && qz_var_exists(data.target, "hit_flash")) {
+    if (has_target && !is_struct(data.target) && instance_exists(data.target) && variable_instance_exists(data.target, "hit_flash")) {
         data.target.hit_flash = 0.16;
     }
 
@@ -141,7 +185,10 @@ events_subscribe(EVT.HIT_CRITICAL, function(evt, data) {
     particle_pool.spawn(tx, ty, 0, 0, 0, 0, 8, 56, c_yellow, c_orange, 0.20, VFX_SHAPE.RING, 1.0);
 
     // High Hierarchy Damage Text (CRIT badge in gold)
-    text_pool.spawn(tx, ty, "CRIT " + string(data.damage), make_color_rgb(255, 220, 40), 1.4, 0.9);
+    var dmg = (is_struct(data) && variable_struct_exists(data, "damage")) ? data.damage : 0;
+    if (dmg > 0) {
+        text_pool.spawn(tx, ty, "CRIT " + string(dmg), make_color_rgb(255, 220, 40), 1.4, 0.9);
+    }
 
     // Screen flash & Slash Decal
     trigger_flash(make_color_rgb(255, 230, 80), 0.22, 10.0);
@@ -152,8 +199,8 @@ events_subscribe(EVT.HIT_CRITICAL, function(evt, data) {
 // 3. PARRY (Standard Aegis Deflection)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.PARRY, function(evt, data) {
-    var def_x = (is_struct(data.defender) || instance_exists(data.defender)) ? data.defender.x : x;
-    var def_y = (is_struct(data.defender) || instance_exists(data.defender)) ? data.defender.y : y;
+    var def_x = vfx_get_x(data);
+    var def_y = vfx_get_y(data);
 
     // Expanding Cyan Ring + Deflection Sparks
     particle_pool.spawn(def_x, def_y, 0, 0, 0, 0, 10, 65, c_aqua, c_white, 0.22, VFX_SHAPE.RING, 1.0);
@@ -170,8 +217,8 @@ events_subscribe(EVT.PARRY, function(evt, data) {
 // 4. PERFECT PARRY (High Resonance Counter)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.PERFECT_PARRY, function(evt, data) {
-    var def_x = (is_struct(data.defender) || instance_exists(data.defender)) ? data.defender.x : x;
-    var def_y = (is_struct(data.defender) || instance_exists(data.defender)) ? data.defender.y : y;
+    var def_x = vfx_get_x(data);
+    var def_y = vfx_get_y(data);
 
     // Dual Golden & Cyan Shockwave Rings
     particle_pool.spawn(def_x, def_y, 0, 0, 0, 0, 12, 120, c_yellow, c_white, 0.32, VFX_SHAPE.RING, 1.0);
@@ -193,14 +240,14 @@ events_subscribe(EVT.PERFECT_PARRY, function(evt, data) {
 // 5. POWERS (Shockwave, Blade Surge, Blink)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.POWER, function(evt, data) {
-    var pid = data.power_id;
+    var pid = (is_struct(data) && variable_struct_exists(data, "power_id")) ? data.power_id : POWER_ID.SHOCKWAVE;
     var b_mult = vfx_get_budget();
 
     switch (pid) {
         case POWER_ID.SHOCKWAVE:
-            var px = variable_struct_exists(data, "x") ? data.x : (instance_exists(data.player) ? data.player.x : x);
-            var py = variable_struct_exists(data, "y") ? data.y : (instance_exists(data.player) ? data.player.y : y);
-            var r = variable_struct_exists(data, "radius") ? data.radius : 80;
+            var px = vfx_get_x(data);
+            var py = vfx_get_y(data);
+            var r = (is_struct(data) && variable_struct_exists(data, "radius")) ? data.radius : 80;
 
             // Expanding electric shockwave ring
             particle_pool.spawn(px, py, 0, 0, 0, 0, 10, r * 1.5, c_aqua, c_white, 0.30, VFX_SHAPE.RING, 1.0);
@@ -230,9 +277,9 @@ events_subscribe(EVT.POWER, function(evt, data) {
             break;
 
         case POWER_ID.BLADE_SURGE:
-            var sx = variable_struct_exists(data, "x") ? data.x : (instance_exists(data.player) ? data.player.x : x);
-            var sy = variable_struct_exists(data, "y") ? data.y : (instance_exists(data.player) ? data.player.y : y);
-            var fdir = variable_struct_exists(data, "facing") ? data.facing : 1;
+            var sx = vfx_get_x(data);
+            var sy = vfx_get_y(data);
+            var fdir = (is_struct(data) && variable_struct_exists(data, "facing")) ? data.facing : 1;
 
             // Supersonic conical cutting streaks along surge vector
             var bs_count = round(18 * b_mult);
@@ -251,10 +298,10 @@ events_subscribe(EVT.POWER, function(evt, data) {
             break;
 
         case POWER_ID.BLINK:
-            var start_x = variable_struct_exists(data, "start_x") ? data.start_x : x;
-            var start_y = variable_struct_exists(data, "start_y") ? data.start_y : y;
-            var end_x   = variable_struct_exists(data, "end_x") ? data.end_x : (instance_exists(data.player) ? data.player.x : x);
-            var end_y   = variable_struct_exists(data, "end_y") ? data.end_y : (instance_exists(data.player) ? data.player.y : y);
+            var start_x = (is_struct(data) && variable_struct_exists(data, "start_x")) ? data.start_x : vfx_get_x(data);
+            var start_y = (is_struct(data) && variable_struct_exists(data, "start_y")) ? data.start_y : vfx_get_y(data);
+            var end_x   = (is_struct(data) && variable_struct_exists(data, "end_x")) ? data.end_x : start_x;
+            var end_y   = (is_struct(data) && variable_struct_exists(data, "end_y")) ? data.end_y : start_y;
 
             // 1. Departure collapse particles (quantum implosion)
             particle_pool.spawn(start_x, start_y, 0, 0, 0, 0, 24, 2, c_aqua, c_white, 0.18, VFX_SHAPE.RING, 0.9);
@@ -294,9 +341,10 @@ events_subscribe(EVT.POWER, function(evt, data) {
 
 // Power End (Blade Surge brake sparks)
 events_subscribe(EVT.POWER_END, function(evt, data) {
-    if (data.power_id == POWER_ID.BLADE_SURGE && instance_exists(data.player)) {
-        var px = data.player.x;
-        var py = data.player.y + data.player.bbox_hh;
+    var pid = (is_struct(data) && variable_struct_exists(data, "power_id")) ? data.power_id : -1;
+    if (pid == POWER_ID.BLADE_SURGE) {
+        var px = vfx_get_x(data);
+        var py = vfx_get_y(data) + 16;
         for (var i = 0; i < 6; i++) {
             particle_pool.spawn(px, py, random_range(-100, 100), random_range(-20, -60), 0, 150,
                                 4, 1, c_ltgray, c_dkgray, 0.25, VFX_SHAPE.DUST, 0.6);
@@ -308,19 +356,21 @@ events_subscribe(EVT.POWER_END, function(evt, data) {
 // 6. DASH & SLAM
 // ---------------------------------------------------------------------
 events_subscribe(EVT.DASH, function(evt, data) {
-    var px = (is_struct(data.player) || instance_exists(data.player)) ? data.player.x : x;
-    var py = (is_struct(data.player) || instance_exists(data.player)) ? data.player.y : y;
+    var px = vfx_get_x(data);
+    var py = vfx_get_y(data);
+    var dx = (is_struct(data) && variable_struct_exists(data, "dir_x")) ? data.dir_x : 1;
+    var dy = (is_struct(data) && variable_struct_exists(data, "dir_y")) ? data.dir_y : 0;
 
     for (var i = 0; i < 6; i++) {
-        var vx = -data.dir_x * random_range(40, 160) + random_range(-20, 20);
-        var vy = -data.dir_y * random_range(40, 160) + random_range(-20, 20);
+        var vx = -dx * random_range(40, 160) + random_range(-20, 20);
+        var vy = -dy * random_range(40, 160) + random_range(-20, 20);
         particle_pool.spawn(px, py + 8, vx, vy, 0, -20, 5, 1, c_ltgray, c_dkgray, 0.25, VFX_SHAPE.DUST, 0.7);
     }
 }, id);
 
 events_subscribe(EVT.SLAM, function(evt, data) {
-    var sx = data.x;
-    var sy = data.y;
+    var sx = vfx_get_x(data);
+    var sy = vfx_get_y(data);
 
     // Shockwave Ring + Dust Waves
     particle_pool.spawn(sx, sy, 0, 0, 0, 0, 10, 95, c_white, c_gray, 0.25, VFX_SHAPE.RING, 0.9);
@@ -338,11 +388,12 @@ events_subscribe(EVT.SLAM, function(evt, data) {
 // 7. ELEMENTAL SYSTEMS (Applied & 6 Reaction Signatures)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.ELEMENT_APPLIED, function(evt, data) {
-    var tx = (is_struct(data.target) || instance_exists(data.target)) ? data.target.x : x;
-    var ty = (is_struct(data.target) || instance_exists(data.target)) ? data.target.y : y;
+    var tx = vfx_get_x(data);
+    var ty = vfx_get_y(data);
 
     var c_col = c_white;
-    switch (data.element) {
+    var elem = (is_struct(data) && variable_struct_exists(data, "element")) ? data.element : ELEMENT.NONE;
+    switch (elem) {
         case ELEMENT.FIRE:  c_col = make_color_rgb(255, 120, 20); break;
         case ELEMENT.WATER: c_col = make_color_rgb(40, 180, 255); break;
         case ELEMENT.EARTH: c_col = make_color_rgb(200, 140, 60); break;
@@ -356,10 +407,10 @@ events_subscribe(EVT.ELEMENT_APPLIED, function(evt, data) {
 }, id);
 
 events_subscribe(EVT.ELEMENT_REACTION, function(evt, data) {
-    var tx = (is_struct(data.target) || instance_exists(data.target)) ? data.target.x : x;
-    var ty = (is_struct(data.target) || instance_exists(data.target)) ? data.target.y : y;
+    var tx = vfx_get_x(data);
+    var ty = vfx_get_y(data);
 
-    var r_name = data.reaction.name;
+    var r_name = (is_struct(data) && variable_struct_exists(data, "reaction") && is_struct(data.reaction) && variable_struct_exists(data.reaction, "name")) ? data.reaction.name : "VAPORIZE";
     var c_banner = c_white;
     var b_mult = vfx_get_budget();
 
@@ -434,10 +485,8 @@ events_subscribe(EVT.ELEMENT_REACTION, function(evt, data) {
 // 8. OVERDRIVE (Activation, Aura & Vent Exhaust)
 // ---------------------------------------------------------------------
 events_subscribe(EVT.OVERDRIVE, function(evt, data) {
-    var px = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.x :
-             ((is_numeric(data) && instance_exists(data)) ? data.x : x);
-    var py = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.y :
-             ((is_numeric(data) && instance_exists(data)) ? data.y : y);
+    var px = vfx_get_x(data);
+    var py = vfx_get_y(data);
 
     trigger_flash(c_yellow, 0.45, 4.0);
     text_pool.spawn(px, py - 40, "OVERDRIVE ACTIVATED!", make_color_rgb(255, 220, 0), 1.55, 1.3);
@@ -452,8 +501,8 @@ events_subscribe(EVT.OVERDRIVE, function(evt, data) {
 }, id);
 
 events_subscribe(EVT.OVERDRIVE_END, function(evt, data) {
-    var px = (is_numeric(data) && instance_exists(data)) ? data.x : x;
-    var py = (is_numeric(data) && instance_exists(data)) ? data.y : y;
+    var px = vfx_get_x(data);
+    var py = vfx_get_y(data);
 
     // Vent exhaust steam puffs from both sides
     for (var i = 0; i < 12; i++) {
@@ -468,8 +517,8 @@ events_subscribe(EVT.OVERDRIVE_END, function(evt, data) {
 // 9. ENTITY KILLED & EXECUTION
 // ---------------------------------------------------------------------
 events_subscribe(EVT.ENTITY_KILLED, function(evt, data) {
-    var vx = (is_struct(data.victim) || instance_exists(data.victim)) ? data.victim.x : x;
-    var vy = (is_struct(data.victim) || instance_exists(data.victim)) ? data.victim.y : y;
+    var vx = vfx_get_x(data);
+    var vy = vfx_get_y(data);
 
     // Shrapnel destruction explosion
     var count = round(24 * vfx_get_budget());
@@ -488,8 +537,8 @@ events_subscribe(EVT.ENTITY_KILLED, function(evt, data) {
 }, id);
 
 events_subscribe(EVT.ENERGY_FULL, function(evt, data) {
-    var px = (is_numeric(data) && instance_exists(data)) ? data.x : x;
-    var py = (is_numeric(data) && instance_exists(data)) ? data.y : y;
+    var px = vfx_get_x(data);
+    var py = vfx_get_y(data);
     text_pool.spawn(px, py - 36, "OVERDRIVE READY!", make_color_rgb(255, 215, 0), 1.25, 0.9);
 }, id);
 
@@ -497,17 +546,20 @@ events_subscribe(EVT.ENERGY_FULL, function(evt, data) {
 // 10. GRAPPLE & MOVEMENT PARTICLES
 // ---------------------------------------------------------------------
 events_subscribe(EVT.GRAPPLE_ATTACH, function(evt, data) {
+    var ax = vfx_get_x(data);
+    var ay = vfx_get_y(data);
+
     for (var i = 0; i < 8; i++) {
         var ang = random(360);
         var spd = random_range(60, 200);
-        particle_pool.spawn(data.anchor_x, data.anchor_y, lengthdir_x(spd, ang), lengthdir_y(spd, ang), 0, 0,
+        particle_pool.spawn(ax, ay, lengthdir_x(spd, ang), lengthdir_y(spd, ang), 0, 0,
                             2, 0.5, c_white, c_aqua, 0.2, VFX_SHAPE.STREAK, 1.0);
     }
 }, id);
 
 events_subscribe(EVT.GRAPPLE_SLING, function(evt, data) {
-    var px = (is_struct(data.player) || instance_exists(data.player)) ? data.player.x : x;
-    var py = (is_struct(data.player) || instance_exists(data.player)) ? data.player.y : y;
+    var px = vfx_get_x(data);
+    var py = vfx_get_y(data);
 
     particle_pool.spawn(px, py, 0, 0, 0, 0, 8, 70, c_aqua, c_white, 0.22, VFX_SHAPE.RING, 0.9);
     for (var i = 0; i < 12; i++) {
@@ -519,8 +571,8 @@ events_subscribe(EVT.GRAPPLE_SLING, function(evt, data) {
 }, id);
 
 events_subscribe(EVT.JUMP, function(evt, data) {
-    var jx = is_struct(data) && variable_struct_exists(data, "x") ? data.x : x;
-    var jy = is_struct(data) && variable_struct_exists(data, "y") ? data.y : y;
+    var jx = vfx_get_x(data);
+    var jy = vfx_get_y(data);
     for (var i = 0; i < 4; i++) {
         var spd = random_range(-60, 60);
         particle_pool.spawn(jx, jy, spd, random_range(-10, -30), 0, 80,
@@ -529,8 +581,8 @@ events_subscribe(EVT.JUMP, function(evt, data) {
 }, id);
 
 events_subscribe(EVT.LAND, function(evt, data) {
-    var lx = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.x : x;
-    var ly = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? (data.player.y + data.player.bbox_hh) : y;
+    var lx = vfx_get_x(data);
+    var ly = vfx_get_y(data);
     for (var i = 0; i < 8; i++) {
         var dir = (i mod 2 == 0) ? -1 : 1;
         var spd = random_range(40, 140) * dir;
@@ -540,8 +592,8 @@ events_subscribe(EVT.LAND, function(evt, data) {
 }, id);
 
 events_subscribe(EVT.WALL_JUMP, function(evt, data) {
-    var wx = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.x : x;
-    var wy = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.y : y;
+    var wx = vfx_get_x(data);
+    var wy = vfx_get_y(data);
     for (var i = 0; i < 6; i++) {
         var ang = random(360);
         var spd = random_range(60, 180);

@@ -597,9 +597,12 @@ if (variable_global_exists("director") && global.director.state == ENCOUNTER_STA
     // Rating Badge
     var rank_str = "S";
     var c_badge = c_gold_bright;
-    if (d.total_score >= 12000) { rank_str = "S"; c_badge = c_gold_bright; }
-    else if (d.total_score >= 8000) { rank_str = "A"; c_badge = c_crimson_burn; }
-    else if (d.total_score >= 5000) { rank_str = "B"; c_badge = c_cyan_neon; }
+    var s_thresh = (variable_struct_exists(global, "cfg") && variable_struct_exists(global.cfg, "director")) ? global.cfg.director.rank_s : 10500;
+    var a_thresh = (variable_struct_exists(global, "cfg") && variable_struct_exists(global.cfg, "director")) ? global.cfg.director.rank_a : 7500;
+    var b_thresh = (variable_struct_exists(global, "cfg") && variable_struct_exists(global.cfg, "director")) ? global.cfg.director.rank_b : 5000;
+    if (d.total_score >= s_thresh) { rank_str = "S"; c_badge = c_gold_bright; }
+    else if (d.total_score >= a_thresh) { rank_str = "A"; c_badge = c_crimson_burn; }
+    else if (d.total_score >= b_thresh) { rank_str = "B"; c_badge = c_cyan_neon; }
     else { rank_str = "C"; c_badge = c_emerald_tech; }
 
     draw_set_color(c_badge);

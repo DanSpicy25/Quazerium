@@ -35,6 +35,24 @@ function GrappleController(player_inst) constructor {
                 }
             }
         }
+
+        // Enemy Combat Grapple Targeting
+        if (variable_struct_exists(cfg, "enemy_hook_enabled") && cfg.enemy_hook_enabled) {
+            with (obj_enemy_base) {
+                var d = point_distance(other.player.x, other.player.y, x, y);
+                if (d <= cfg.range) {
+                    var dir = point_direction(other.player.x, other.player.y, x, y);
+                    var diff = abs(angle_difference(aim_dir, dir));
+                    if (diff <= cfg.cone_deg) {
+                        var score_val = d + (diff * 2) - 30;
+                        if (score_val < best_score) {
+                            best_score = score_val;
+                            best_anchor = id;
+                        }
+                    }
+                }
+            }
+        }
         return best_anchor;
     };
 
@@ -76,12 +94,12 @@ function GrappleController(player_inst) constructor {
                 if (dist_to_target <= fly_dist) {
                     hook_x = target_x;
                     hook_y = target_y;
-                    if (target_anchor != noone) {
+                    if (target_anchor != noone && instance_exists(target_anchor)) {
                         // Attached!
                         state = GRAPPLE_STATE.ATTACHED;
                         current_len = point_distance(player.x, player.y, hook_x, hook_y);
                         rest_len = current_len;
-                        events_emit(EVT.GRAPPLE_ATTACH, { player: player, anchor: target_anchor, x: hook_x, y: hook_y });
+                        events_emit(EVT.GRAPPLE_ATTACH, { player: player, anchor: target_anchor, x: hook_x, y: hook_y, anchor_x: hook_x, anchor_y: hook_y });
                     } else {
                         // Hit nothing -> retract
                         state = GRAPPLE_STATE.RETRACTING;
@@ -94,6 +112,31 @@ function GrappleController(player_inst) constructor {
                 break;
 
             case GRAPPLE_STATE.ATTACHED:
+                // Enemy Hook Strike: zip towards moving enemy and execute tackle
+                var is_enemy_anchor = (target_anchor != noone && instance_exists(target_anchor) && variable_instance_exists(target_anchor, "team") && target_anchor.team == TEAM.ENEMY);
+                if (is_enemy_anchor) {
+                    hook_x = target_anchor.x;
+                    hook_y = target_anchor.y;
+                    var d_to_enemy = point_distance(player.x, player.y, hook_x, hook_y);
+                    if (d_to_enemy <= 45) {
+                        // Tackle impact!
+                        target_anchor.hp -= cfg.enemy_tackle_damage;
+                        target_anchor.hit_flash = 0.2;
+                        target_anchor.stun_timer = max(target_anchor.stun_timer, cfg.enemy_tackle_stun);
+                        player.vy = cfg.enemy_tackle_rebound;
+                        player.state = PSTATE.JUMP;
+                        events_emit(EVT.HIT_CONFIRMED, { x: player.x, y: player.y, element: player.active_element, heavy: false, target: target_anchor, attacker: player, damage: cfg.enemy_tackle_damage });
+                        state = GRAPPLE_STATE.IDLE;
+                        target_anchor = noone;
+                        break;
+                    } else {
+                        var zip_dir = point_direction(player.x, player.y, hook_x, hook_y);
+                        player.vx = lengthdir_x(cfg.enemy_zip_speed, zip_dir);
+                        player.vy = lengthdir_y(cfg.enemy_zip_speed, zip_dir);
+                        break;
+                    }
+                }
+
                 current_len = point_distance(player.x, player.y, hook_x, hook_y);
                 var rope_dir = point_direction(player.x, player.y, hook_x, hook_y);
 

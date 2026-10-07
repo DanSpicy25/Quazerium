@@ -382,6 +382,36 @@ function qz_run_selftest() {
     var haz_audio_ok = (global.audio.recent_log[0] == "HAZARD_TRIGGERED");
     if (_assert(enc_audio_ok && haz_audio_ok, "Audio Integration: Encounter start and hazard events cleanly dispatched through qz_audio hooks")) passes++; else fails++;
 
+    // 41. Combat Responsiveness: Recovery-Cancelling into Dash and Parry
+    var c_cfg = global.cfg.combat;
+    var cancel_dash = variable_struct_exists(c_cfg, "cancel_recover_with_dash") && c_cfg.cancel_recover_with_dash;
+    var cancel_parry = variable_struct_exists(c_cfg, "cancel_recover_with_parry") && c_cfg.cancel_recover_with_parry;
+    if (_assert(cancel_dash && cancel_parry, "Combat Responsiveness: Recovery-cancelling into Dash and Parry enabled for fluid combat loop")) passes++; else fails++;
+
+    // 42. Combat Grapple: Hostile Enemy Latching, Zip-Strike & Stun
+    var g_cfg = global.cfg.grapple;
+    var g_ok = (variable_struct_exists(g_cfg, "enemy_hook_enabled") && g_cfg.enemy_hook_enabled &&
+                g_cfg.enemy_zip_speed == 980 && g_cfg.enemy_tackle_damage == 8 &&
+                g_cfg.enemy_tackle_stun == 0.45 && g_cfg.enemy_tackle_rebound == -360);
+    if (_assert(g_ok, "Combat Grapple: Hostile enemy latching, zip-strike velocity, stun and aerial rebound configured")) passes++; else fails++;
+
+    // 43. Director Pacing & Dynamic Rank Scoring Calibration
+    var dir_cfg = global.cfg.director;
+    var dir_ok = (variable_struct_exists(dir_cfg, "intro_duration") && dir_cfg.intro_duration == 1.2 &&
+                  variable_struct_exists(dir_cfg, "clear_duration") && dir_cfg.clear_duration == 1.4 &&
+                  variable_struct_exists(dir_cfg, "rank_s") && dir_cfg.rank_s == 10500 &&
+                  variable_struct_exists(dir_cfg, "rank_a") && dir_cfg.rank_a == 7500 &&
+                  variable_struct_exists(dir_cfg, "rank_b") && dir_cfg.rank_b == 5000);
+    if (_assert(dir_ok, "Director Pacing: Tightened encounter intro/clear intervals and calibrated rank thresholds")) passes++; else fails++;
+
+    // 44. Content Balance: Hazard and Interactive Tunables
+    var haz_e = global.cfg.hazard.electric;
+    var int_lp = global.cfg.interact.launch_pad;
+    var int_can = global.cfg.interact.canister;
+    var bal_ok = (haz_e.surge == 1.8 && haz_e.damage_player == 10 && haz_e.damage_enemy == 18 &&
+                  int_lp.speed == -860 && int_can.radius == 110 && int_can.damage == 45);
+    if (_assert(bal_ok, "Content Balance: Electric hazard timing and interactive object parameters verified in global config")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

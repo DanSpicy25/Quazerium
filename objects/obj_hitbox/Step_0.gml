@@ -5,6 +5,11 @@
 var dt = qz_dt();
 if (dt <= 0) exit;
 
+if (variable_instance_exists(id, "startup") && startup > 0) {
+    startup -= dt;
+    exit;
+}
+
 timer -= dt;
 if (timer <= 0) {
     instance_destroy();

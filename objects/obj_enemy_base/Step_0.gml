@@ -11,6 +11,7 @@ if (iframes > 0) iframes = max(0, iframes - dt);
 if (hitstun > 0) hitstun = max(0, hitstun - dt);
 if (hit_flash > 0) hit_flash = max(0, hit_flash - dt);
 if (attack_cd_timer > 0) attack_cd_timer = max(0, attack_cd_timer - dt);
+if (jump_cd_timer > 0) jump_cd_timer = max(0, jump_cd_timer - dt);
 
 // 2. Stun state takes top priority
 if (stun_timer > 0) {
@@ -46,6 +47,13 @@ if (state != ESTATE.STUNNED) {
                         vx = qz_approach(vx, -facing * speed_val, accel_val * dt);
                     } else {
                         vx = qz_approach(vx, facing * speed_val, accel_val * dt);
+                    }
+
+                    // Jump obstacle navigation: if blocked by a wall or target is above on an arena platform
+                    if (p != noone && instance_exists(p) && on_ground && jump_cd_timer <= 0 && (p.y < y - 28 || (facing > 0 && on_wall_right) || (facing < 0 && on_wall_left))) {
+                        vy = -540;
+                        on_ground = false;
+                        jump_cd_timer = 0.8;
                     }
                 }
             }

@@ -74,10 +74,18 @@ function physics_move_and_collide(inst, dt) {
 
 function physics_check_solid(x1, y1, x2, y2) {
     with (obj_solid) {
-        if (qz_aabb_overlap(x1, y1, x2, y2, bbox_left, bbox_top, bbox_right, bbox_bottom)) {
+        var sx1 = variable_instance_exists(id, "solid_x1") ? solid_x1 : x;
+        var sy1 = variable_instance_exists(id, "solid_y1") ? solid_y1 : y;
+        var sx2 = variable_instance_exists(id, "solid_x2") ? solid_x2 : (x + (32 * image_xscale));
+        var sy2 = variable_instance_exists(id, "solid_y2") ? solid_y2 : (y + (32 * image_yscale));
+        if (qz_aabb_overlap(x1, y1, x2, y2, sx1, sy1, sx2, sy2)) {
             return true;
         }
     }
     return false;
+}
+
+function physics_place_meeting(px, py, obj) {
+    return physics_check_solid(px - 4, py - 4, px + 4, py + 4);
 }
 

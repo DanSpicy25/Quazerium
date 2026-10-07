@@ -43,6 +43,7 @@ attack_cd_timer = 0;
 windup_timer = 0;
 attack_timer = 0;
 recover_timer = 0;
+jump_cd_timer = 0;
 
 speed_val = cfg.speed;
 accel_val = cfg.accel;

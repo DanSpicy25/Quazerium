@@ -33,6 +33,8 @@ function qz_config_init() {
             combo_window: 1.2, combo_step: 0.05, combo_cap: 20,
             energy_per_hit: 4, energy_per_charged_hit: 10,
             air_attack_gravity_mult: 0.35,
+            cancel_recover_with_dash: true,
+            cancel_recover_with_parry: true,
         },
 
         parry: {
@@ -48,6 +50,25 @@ function qz_config_init() {
             range: 380, cone_deg: 40, hook_speed: 2400, stiffness: 180, damping: 12,
             min_length: 36, reel_speed: 420, max_stretch: 1.12, swing_accel: 900,
             sling_boost: 1.15, sling_up: 380, zip_speed: 900, fire_buffer: 0.1,
+            enemy_hook_enabled: true, enemy_zip_speed: 980, enemy_tackle_damage: 8,
+            enemy_tackle_stun: 0.45, enemy_tackle_rebound: -360,
+        },
+
+        director: {
+            intro_duration: 1.2,
+            clear_duration: 1.4,
+            rank_s: 10500,
+            rank_a: 7500,
+            rank_b: 5000,
+        },
+
+        hazard: {
+            electric: { dormant: 2.5, warning: 0.8, surge: 1.8, damage_player: 10, damage_enemy: 18, stun_enemy: 0.9 },
+        },
+
+        interact: {
+            launch_pad: { speed: -860, cooldown: 0.25 },
+            canister: { radius: 110, damage: 45, energy_reward: 25 },
         },
 
         powers: {
