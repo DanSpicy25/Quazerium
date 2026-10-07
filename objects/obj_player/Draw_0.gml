@@ -20,7 +20,8 @@ if (overdrive_active) {
 // ---------------------------------------------------------------------
 // 1. GHOST AFTERIMAGES (Dash / Overdrive)
 // ---------------------------------------------------------------------
-for (var a = 0; a < 6; a++) {
+var max_ai = quality_get().trail_segments;
+for (var a = 0; a < max_ai; a++) {
     var ai = afterimages[a];
     if (ai.active && ai.alpha > 0.02) {
         draw_set_alpha(ai.alpha * 0.5);

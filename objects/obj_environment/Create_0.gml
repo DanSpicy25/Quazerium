@@ -7,11 +7,9 @@ depth = 500; // Far background layer
 
 time_t = 0;
 
-// Ambient atmospheric dust motes
-var q = quality_get();
-ambient_count = (global.quality_level == QUALITY.LOW) ? 20 : ((global.quality_level == QUALITY.HIGH) ? 100 : 50);
-dust = array_create(ambient_count);
-for (var i = 0; i < ambient_count; i++) {
+// Ambient atmospheric dust motes (Pre-allocated pool of 100, active count scaled by quality profile)
+dust = array_create(100);
+for (var i = 0; i < 100; i++) {
     dust[i] = {
         x: random(room_width),
         y: random(room_height),

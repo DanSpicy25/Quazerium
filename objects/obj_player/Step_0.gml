@@ -332,7 +332,8 @@ if (state == PSTATE.RUN) {
     run_anim_t = 0;
 }
 
-for (var a = 0; a < 6; a++) {
+var max_ai = quality_get().trail_segments;
+for (var a = 0; a < max_ai; a++) {
     var ai = afterimages[a];
     if (ai.active) {
         ai.alpha -= 4.0 * dt;
@@ -344,8 +345,8 @@ if (state == PSTATE.DASH || (overdrive_active && (abs(vx) > 100 || abs(vy) > 100
     afterimage_timer -= dt;
     if (afterimage_timer <= 0) {
         afterimage_timer = 0.04;
+        afterimage_head = (afterimage_head + 1) mod max_ai;
         var ai_spawn = afterimages[afterimage_head];
-        afterimage_head = (afterimage_head + 1) mod 6;
         ai_spawn.active = true;
         ai_spawn.x = x;
         ai_spawn.y = y;

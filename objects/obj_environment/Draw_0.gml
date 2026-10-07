@@ -52,7 +52,7 @@ for (var k = t_start; k <= t_end; k++) {
     draw_circle(ant_x, by - 28, 2.5, false);
 
     // Window matrix accents (non-intrusive ambient city life)
-    if (global.quality_level != QUALITY.LOW) {
+    if (quality_get().draw_distant_windows) {
         var num_floors = min(8, floor(h_hash / 40));
         for (var fl = 1; fl < num_floors; fl++) {
             var fy = by + (fl * 32);
@@ -119,6 +119,7 @@ draw_set_alpha(1.0);
 // 4. AMBIENT ATMOSPHERIC DUST MOTES
 // ---------------------------------------------------------------------
 draw_set_color(make_color_rgb(180, 225, 255));
+var ambient_count = quality_get().ambient_dust;
 for (var i = 0; i < ambient_count; i++) {
     var d = dust[i];
     if (d.x >= cx - 30 && d.x <= cx + cw + 30 && d.y >= cy - 30 && d.y <= cy + ch + 30) {

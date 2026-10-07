@@ -274,6 +274,40 @@ function qz_run_selftest() {
     if (_assert(global.test_player_died_rx && mock_player_target.hp <= 0, "Combat: Lethal damage to player correctly fires EVT.PLAYER_DIED")) passes++; else fails++;
     events_unsubscribe_owner("selftest_death");
 
+    // 30. Quality: Dynamic Profile Switching & Budgets
+    quality_set(QUALITY.LOW);
+    var q_low_prof = quality_get();
+    var ok_low = (q_low_prof.max_particles == 100 && q_low_prof.max_decals == 24 && !q_low_prof.enable_shaders && !q_low_prof.enable_lighting && q_low_prof.power_vfx_budget == 0.5);
+    quality_set(QUALITY.HIGH);
+    var q_high_prof = quality_get();
+    var ok_high = (q_high_prof.max_particles == 2000 && q_high_prof.max_decals == 128 && q_high_prof.enable_shaders && q_high_prof.enable_lighting && q_high_prof.power_vfx_budget == 1.5);
+    quality_set(QUALITY.MEDIUM);
+    if (_assert(ok_low && ok_high, "Quality: LOW and HIGH profiles enforce exact hardware budgets")) passes++; else fails++;
+
+    // 31. Performance: VfxParticlePool Dynamic Clamping & Zero-Allocation Budget
+    var test_p_pool = new VfxParticlePool(2048);
+    quality_set(QUALITY.LOW);
+    test_p_pool.set_budget(100);
+    for (var tp = 0; tp < 150; tp++) {
+        test_p_pool.spawn(0, 0, 10, 10, 0, 0, 2, 0, c_white, c_white, 1.0, VFX_SHAPE.POINT);
+    }
+    var active_pt_cnt = test_p_pool.get_active_count();
+    quality_set(QUALITY.MEDIUM);
+    test_p_pool.clear();
+    if (_assert(active_pt_cnt <= 100, "Performance: VfxParticlePool strictly caps active particles to profile limit on LOW")) passes++; else fails++;
+
+    // 32. Performance: VfxDecalPool Dynamic Clamping & Budget Scaling
+    var test_d_pool = new VfxDecalPool(128);
+    quality_set(QUALITY.LOW);
+    test_d_pool.set_budget(24);
+    for (var td = 0; td < 40; td++) {
+        test_d_pool.spawn(0, 0, DECAL_TYPE.SCORCH, c_black);
+    }
+    var active_dec_cnt = test_d_pool.get_active_count();
+    quality_set(QUALITY.MEDIUM);
+    test_d_pool.clear();
+    if (_assert(active_dec_cnt <= 24, "Performance: VfxDecalPool strictly caps active decals to profile limit on LOW")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

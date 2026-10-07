@@ -11,10 +11,10 @@ var cur_y = pad_y;
 
 // Background panel
 draw_set_color(c_black);
-draw_set_alpha(0.75);
-draw_rectangle(8, 8, 380, 480, false);
+draw_set_alpha(0.85);
+draw_rectangle(8, 8, 410, 580, false);
 draw_set_color(c_dkgray);
-draw_rectangle(8, 8, 380, 480, true);
+draw_rectangle(8, 8, 410, 580, true);
 draw_set_alpha(1.0);
 
 // Header
@@ -28,6 +28,22 @@ draw_text(pad_x, cur_y, "FPS: " + string(fps) + " / " + string(fps_real)); cur_y
 draw_text(pad_x, cur_y, "Frame Time: " + string_format(qz_raw_dt() * 1000, 1, 2) + " ms"); cur_y += line_h;
 draw_text(pad_x, cur_y, "Quality Profile: " + global.quality_names[global.quality_level] + " (F2 to cycle)"); cur_y += line_h;
 draw_text(pad_x, cur_y, "Time Scale: " + string_format(global.time.scale, 1, 2) + " | Hitstop: " + string_format(global.time.hitstop, 1, 3)); cur_y += line_h * 1.3;
+
+// Hardware & VFX Budgets
+if (instance_exists(obj_vfx)) {
+    var vfx = obj_vfx;
+    var n_pt = vfx.particle_pool.get_active_count();
+    var n_dec = vfx.decal_pool.get_active_count();
+    var n_txt = vfx.text_pool.get_active_count();
+    var q = quality_get();
+    draw_set_color(c_fuchsia);
+    draw_text(pad_x, cur_y, "--- HARDWARE & VFX BUDGETS ---"); cur_y += line_h;
+    draw_set_color(c_white);
+    draw_text(pad_x, cur_y, "Instances: " + string(instance_count) + " | Entities: " + string(instance_number(obj_enemy_base) + 1)); cur_y += line_h;
+    draw_text(pad_x, cur_y, "Particles: " + string(n_pt) + " / " + string(q.max_particles) + " (Budget: " + string_format(q.power_vfx_budget, 1, 1) + "x)"); cur_y += line_h;
+    draw_text(pad_x, cur_y, "Decals: " + string(n_dec) + " / " + string(q.max_decals) + " | Combat Text: " + string(n_txt) + " / 32"); cur_y += line_h;
+    draw_text(pad_x, cur_y, "2D Lighting: " + (q.enable_lighting ? "ON" : "OFF") + " | Shaders: " + (q.enable_shaders ? "ON" : "OFF")); cur_y += line_h * 1.3;
+}
 
 // Player metrics
 if (instance_exists(obj_player)) {

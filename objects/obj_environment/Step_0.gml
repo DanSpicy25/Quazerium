@@ -6,6 +6,7 @@
 var dt = qz_raw_dt();
 time_t += dt;
 
+var ambient_count = quality_get().ambient_dust;
 for (var i = 0; i < ambient_count; i++) {
     var d = dust[i];
     d.x += d.vx * dt;

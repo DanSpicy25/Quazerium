@@ -6,9 +6,9 @@
 
 var q = quality_get();
 
-particle_pool = new VfxParticlePool(q.max_particles);
+particle_pool = new VfxParticlePool(2048);
 text_pool = new VfxCombatTextPool(32);
-decal_pool = new VfxDecalPool(q.max_decals);
+decal_pool = new VfxDecalPool(128);
 
 flash_color = c_white;
 flash_alpha = 0.0;
@@ -21,11 +21,11 @@ trigger_flash = function(col, a, decay_spd = 8.0) {
     flash_decay = decay_spd;
 };
 
-// Helper to scale particle counts by profile budget
-var _get_budget = function() {
+events_subscribe(EVT.QUALITY_CHANGED, function(evt, data) {
     var prof = quality_get();
-    return variable_struct_exists(prof, "power_vfx_budget") ? prof.power_vfx_budget : 1.0;
-};
+    particle_pool.set_budget(prof.max_particles);
+    decal_pool.set_budget(prof.max_decals);
+}, id);
 
 // ---------------------------------------------------------------------
 // 1. HIT CONFIRMED (Normal Combat Hit)
@@ -43,7 +43,7 @@ events_subscribe(EVT.HIT_CONFIRMED, function(evt, data) {
 
     // Directional hit angle (from attacker to target)
     var hit_ang = point_direction(ax, ay, tx, ty);
-    var b_mult = (global.quality_level == QUALITY.LOW) ? 0.5 : 1.0;
+    var b_mult = vfx_get_budget();
 
     // Directional impact sparks
     var spk_count = round(8 * b_mult);
@@ -126,7 +126,7 @@ events_subscribe(EVT.HIT_CRITICAL, function(evt, data) {
     }
 
     var hit_ang = point_direction(ax, ay, tx, ty);
-    var b_mult = (global.quality_level == QUALITY.LOW) ? 0.6 : 1.0;
+    var b_mult = vfx_get_budget();
 
     // Golden Spark dual-cone burst along slash arc
     var spk_count = round(20 * b_mult);
@@ -178,7 +178,7 @@ events_subscribe(EVT.PERFECT_PARRY, function(evt, data) {
     particle_pool.spawn(def_x, def_y, 0, 0, 0, 0, 6, 85, c_white, c_aqua, 0.26, VFX_SHAPE.RING, 0.9);
 
     // 360-degree radiant streak blast
-    var count = (global.quality_level == QUALITY.LOW) ? 14 : 28;
+    var count = round(28 * vfx_get_budget());
     for (var i = 0; i < count; i++) {
         var ang = random(360);
         var spd = random_range(260, 580);
@@ -194,7 +194,7 @@ events_subscribe(EVT.PERFECT_PARRY, function(evt, data) {
 // ---------------------------------------------------------------------
 events_subscribe(EVT.POWER, function(evt, data) {
     var pid = data.power_id;
-    var b_mult = (global.quality_level == QUALITY.LOW) ? 0.5 : 1.0;
+    var b_mult = vfx_get_budget();
 
     switch (pid) {
         case POWER_ID.SHOCKWAVE:
@@ -361,7 +361,7 @@ events_subscribe(EVT.ELEMENT_REACTION, function(evt, data) {
 
     var r_name = data.reaction.name;
     var c_banner = c_white;
-    var b_mult = (global.quality_level == QUALITY.LOW) ? 0.6 : 1.0;
+    var b_mult = vfx_get_budget();
 
     switch (r_name) {
         case "VAPORIZE": // Fire + Water: Boiling steam clouds + dual ring
@@ -472,7 +472,7 @@ events_subscribe(EVT.ENTITY_KILLED, function(evt, data) {
     var vy = (is_struct(data.victim) || instance_exists(data.victim)) ? data.victim.y : y;
 
     // Shrapnel destruction explosion
-    var count = (global.quality_level == QUALITY.LOW) ? 12 : 24;
+    var count = round(24 * vfx_get_budget());
     for (var i = 0; i < count; i++) {
         var ang = random(360);
         var spd = random_range(160, 450);

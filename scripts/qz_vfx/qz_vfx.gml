@@ -7,6 +7,12 @@
 enum VFX_SHAPE { POINT, STREAK, DUST, SHARD, RING }
 enum DECAL_TYPE { SCORCH, SLASH, CRACK }
 
+/// Returns the particle budget scalar for the active quality profile.
+function vfx_get_budget() {
+    var prof = quality_get();
+    return variable_struct_exists(prof, "power_vfx_budget") ? prof.power_vfx_budget : 1.0;
+}
+
 /// Master Particle Pool: fixed array, zero dynamic allocations during gameplay.
 function VfxParticlePool(capacity) constructor {
     max_count = capacity;
@@ -29,8 +35,9 @@ function VfxParticlePool(capacity) constructor {
     }
 
     static spawn = function(px, py, pvx, pvy, pax, pay, psize, pend_size, c1, c2, plife, pshape, palpha = 1.0, pspin = 0.0) {
+        var budget_limit = min(max_count, quality_get().max_particles);
         var p = particles[head];
-        head = (head + 1) mod max_count;
+        head = (head + 1) mod budget_limit;
 
         p.active = true;
         p.x = px;
@@ -52,7 +59,8 @@ function VfxParticlePool(capacity) constructor {
     };
 
     static update = function(dt) {
-        for (var i = 0; i < max_count; i++) {
+        var budget_limit = min(max_count, quality_get().max_particles);
+        for (var i = 0; i < budget_limit; i++) {
             var p = particles[i];
             if (!p.active) continue;
 
@@ -71,7 +79,8 @@ function VfxParticlePool(capacity) constructor {
     };
 
     static draw = function() {
-        for (var i = 0; i < max_count; i++) {
+        var budget_limit = min(max_count, quality_get().max_particles);
+        for (var i = 0; i < budget_limit; i++) {
             var p = particles[i];
             if (!p.active) continue;
 
@@ -119,6 +128,23 @@ function VfxParticlePool(capacity) constructor {
         for (var i = 0; i < max_count; i++) {
             particles[i].active = false;
         }
+    };
+
+    static set_budget = function(new_limit) {
+        var lim = min(max_count, new_limit);
+        head = head mod lim;
+        for (var i = lim; i < max_count; i++) {
+            particles[i].active = false;
+        }
+    };
+
+    static get_active_count = function() {
+        var cnt = 0;
+        var budget_limit = min(max_count, quality_get().max_particles);
+        for (var i = 0; i < budget_limit; i++) {
+            if (particles[i].active) cnt++;
+        }
+        return cnt;
     };
 }
 
@@ -211,10 +237,18 @@ function VfxCombatTextPool(capacity = 32) constructor {
         draw_set_valign(fa_top);
         draw_set_alpha(1.0);
     };
+
+    static get_active_count = function() {
+        var cnt = 0;
+        for (var i = 0; i < max_count; i++) {
+            if (entries[i].active) cnt++;
+        }
+        return cnt;
+    };
 }
 
 /// Persistent Combat Decals (scars on surfaces, blast marks).
-function VfxDecalPool(capacity = 48) constructor {
+function VfxDecalPool(capacity = 128) constructor {
     max_count = capacity;
     head = 0;
     decals = array_create(capacity);
@@ -233,8 +267,9 @@ function VfxDecalPool(capacity = 48) constructor {
     }
 
     static spawn = function(px, py, ptype, pcol, pangle = 0, pradius = 10, plife = undefined) {
+        var budget_limit = min(max_count, quality_get().max_decals);
         var d = decals[head];
-        head = (head + 1) mod max_count;
+        head = (head + 1) mod budget_limit;
 
         var q = quality_get();
         var safe_life = (is_numeric(plife) && plife > 0) ? plife : (variable_struct_exists(q, "decal_life") ? q.decal_life : 7.0);
@@ -251,7 +286,8 @@ function VfxDecalPool(capacity = 48) constructor {
     };
 
     static update = function(dt) {
-        for (var i = 0; i < max_count; i++) {
+        var budget_limit = min(max_count, quality_get().max_decals);
+        for (var i = 0; i < budget_limit; i++) {
             var d = decals[i];
             if (!d.active) continue;
 
@@ -263,7 +299,8 @@ function VfxDecalPool(capacity = 48) constructor {
     };
 
     static draw = function() {
-        for (var i = 0; i < max_count; i++) {
+        var budget_limit = min(max_count, quality_get().max_decals);
+        for (var i = 0; i < budget_limit; i++) {
             var d = decals[i];
             if (!d.active) continue;
 
@@ -300,6 +337,29 @@ function VfxDecalPool(capacity = 48) constructor {
             }
         }
         draw_set_alpha(1.0);
+    };
+
+    static clear = function() {
+        for (var i = 0; i < max_count; i++) {
+            decals[i].active = false;
+        }
+    };
+
+    static set_budget = function(new_limit) {
+        var lim = min(max_count, new_limit);
+        head = head mod lim;
+        for (var i = lim; i < max_count; i++) {
+            decals[i].active = false;
+        }
+    };
+
+    static get_active_count = function() {
+        var cnt = 0;
+        var budget_limit = min(max_count, quality_get().max_decals);
+        for (var i = 0; i < budget_limit; i++) {
+            if (decals[i].active) cnt++;
+        }
+        return cnt;
     };
 }
 

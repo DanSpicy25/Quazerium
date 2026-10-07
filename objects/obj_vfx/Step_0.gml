@@ -16,7 +16,7 @@ if (flash_alpha > 0) {
 // Continuous Overdrive Aura Plasma Particles
 if (instance_exists(obj_player) && obj_player.overdrive_active) {
     var p = obj_player;
-    var aura_count = (global.quality_level == QUALITY.LOW) ? 1 : 2;
+    var aura_count = max(1, round(2 * vfx_get_budget()));
     for (var a = 0; a < aura_count; a++) {
         particle_pool.spawn(p.x + random_range(-12, 12), p.y + random_range(-8, 16),
                             random_range(-20, 20), random_range(-80, -180), 0, -100,

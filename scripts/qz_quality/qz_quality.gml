@@ -8,7 +8,7 @@ function quality_system_init() {
     global.quality_level = QUALITY.MEDIUM;
     global.quality_profiles = array_create(QUALITY.COUNT);
 
-    // LOW: Minimal particles, no heavy shaders, capped decals, strict allocation bounds
+    // LOW: Minimal particles, no heavy shaders, capped decals, strict allocation bounds (Intel HD 2500)
     global.quality_profiles[QUALITY.LOW] = {
         max_particles: 100,
         max_decals: 24,
@@ -17,7 +17,9 @@ function quality_system_init() {
         enable_shaders: false,
         enable_lighting: false,
         shake_mult: 0.8,
-        trail_segments: 4
+        trail_segments: 2,
+        ambient_dust: 15,
+        draw_distant_windows: false
     };
 
     // MEDIUM: Balanced for standard PC
@@ -29,7 +31,9 @@ function quality_system_init() {
         enable_shaders: true,
         enable_lighting: true,
         shake_mult: 1.0,
-        trail_segments: 10
+        trail_segments: 4,
+        ambient_dust: 40,
+        draw_distant_windows: true
     };
 
     // HIGH: Rich visual effects and full post-processing
@@ -41,7 +45,9 @@ function quality_system_init() {
         enable_shaders: true,
         enable_lighting: true,
         shake_mult: 1.2,
-        trail_segments: 24
+        trail_segments: 6,
+        ambient_dust: 80,
+        draw_distant_windows: true
     };
 }
 
