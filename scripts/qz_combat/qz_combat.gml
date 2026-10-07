@@ -172,7 +172,20 @@ function combat_resolve_hit(hb, target) {
     // Check Death
     if (qz_var_exists(target, "hp") && target.hp <= 0) {
         events_emit(EVT.ENTITY_KILLED, { victim: target, killer: hb.owner });
+        if (qz_var_exists(target, "team") && target.team == TEAM.PLAYER) {
+            events_emit(EVT.PLAYER_DIED, target);
+        }
     }
 
     return true;
+}
+
+/// Evaluates player combo count into distinct action game combat ranks (D, C, B, A, S).
+function combat_get_combo_rank(count) {
+    if (count >= 20) return { rank: "S", title: "SUPREME",    r: 255, g: 45,  b: 95  };
+    if (count >= 15) return { rank: "A", title: "ANARCHY",    r: 255, g: 205, b: 30  };
+    if (count >= 10) return { rank: "B", title: "BRUTAL",     r: 40,  g: 240, b: 130 };
+    if (count >= 5)  return { rank: "C", title: "CHARGED",    r: 45,  g: 185, b: 255 };
+    if (count >= 1)  return { rank: "D", title: "DISRUPTOR",  r: 165, g: 180, b: 195 };
+    return undefined;
 }

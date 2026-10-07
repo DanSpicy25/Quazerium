@@ -254,6 +254,26 @@ function qz_run_selftest() {
     quality_set(QUALITY.MEDIUM);
     if (_assert(!q_light_low && q_light_high, "Environment: 2D Lighting strictly disabled on LOW and enabled on HIGH")) passes++; else fails++;
 
+    // 28. HUD & UI: Dynamic Combo Rank Engine
+    var r_d = combat_get_combo_rank(2);
+    var r_c = combat_get_combo_rank(6);
+    var r_b = combat_get_combo_rank(12);
+    var r_a = combat_get_combo_rank(17);
+    var r_s = combat_get_combo_rank(25);
+    var ranks_ok = (r_d != undefined && r_c != undefined && r_b != undefined && r_a != undefined && r_s != undefined &&
+                    r_d.rank == "D" && r_c.rank == "C" && r_b.rank == "B" && r_a.rank == "A" && r_s.rank == "S");
+    if (_assert(ranks_ok, "HUD: Combo Rank Engine accurately scales through ranks D, C, B, A, S")) passes++; else fails++;
+
+    // 29. Combat & UI: Player Death Event Dispatch
+    global.test_player_died_rx = false;
+    var death_sub = function(evt, data) { global.test_player_died_rx = true; };
+    events_subscribe(EVT.PLAYER_DIED, death_sub, "selftest_death");
+    var mock_player_target = { hp: 5, team: TEAM.PLAYER, id: 9999, iframes: 0 };
+    var mock_fatal_hitbox = { owner: 8888, team: TEAM.ENEMY, damage: 10, kb_x: 0, kb_y: 0, hitstop: 0, element: ELEMENT.NONE, can_be_parried: false, duration: 0.1, hit_targets: [] };
+    combat_resolve_hit(mock_fatal_hitbox, mock_player_target);
+    if (_assert(global.test_player_died_rx && mock_player_target.hp <= 0, "Combat: Lethal damage to player correctly fires EVT.PLAYER_DIED")) passes++; else fails++;
+    events_unsubscribe_owner("selftest_death");
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));
