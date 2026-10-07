@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"qz_time",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"qz_time",
+  "parent":{
+    "name":"Core",
+    "path":"folders/Scripts/Core.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

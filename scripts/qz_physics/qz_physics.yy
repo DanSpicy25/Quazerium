@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"qz_physics",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"qz_physics",
+  "parent":{
+    "name":"Gameplay",
+    "path":"folders/Scripts/Gameplay.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

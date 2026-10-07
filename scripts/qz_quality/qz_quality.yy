@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"qz_quality",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"qz_quality",
+  "parent":{
+    "name":"Performance",
+    "path":"folders/Scripts/Performance.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

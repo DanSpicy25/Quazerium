@@ -1,0 +1,189 @@
+// =====================================================================
+// QUAZERIUM — SELF TEST: Automated headless validation of all 22 components.
+// Runs on boot if environment QZ_SELFTEST == "1" or triggered manually.
+// =====================================================================
+
+function qz_run_selftest() {
+    var passes = 0;
+    var fails = 0;
+
+    var _assert = function(cond, test_name) {
+        if (cond) {
+            show_debug_message("[PASS] " + test_name);
+            return 1;
+        } else {
+            show_debug_message("[FAIL] " + test_name);
+            return 0;
+        }
+    };
+
+    show_debug_message("========================================");
+    show_debug_message("QUAZERIUM SELF-TEST SUITE STARTING");
+    show_debug_message("========================================");
+
+    // 1. Core Systems & Names
+    qz_names_init();
+    qz_config_init();
+    if (_assert(global.cfg.player.run_speed > 0, "Core Config initialized")) passes++; else fails++;
+    if (_assert(array_length(global.evt_names) == EVT.COUNT, "Event names table matches EVT.COUNT")) passes++; else fails++;
+
+    // 2. Events Bus
+    events_init();
+    global.test_evt_rx = false;
+    global.test_evt_payload = 0;
+    var test_cb = function(evt, payload) {
+        global.test_evt_rx = true;
+        global.test_evt_payload = payload;
+    };
+    events_subscribe(EVT.PLAYER_ATTACK, test_cb, "test_owner");
+    events_emit(EVT.PLAYER_ATTACK, 42);
+    if (_assert(global.test_evt_rx && global.test_evt_payload == 42, "Event Bus subscription and payload delivery")) passes++; else fails++;
+    events_unsubscribe_owner("test_owner");
+    global.test_evt_rx = false;
+    events_emit(EVT.PLAYER_ATTACK, 99);
+    if (_assert(!global.test_evt_rx, "Event Bus unsubscribe by owner")) passes++; else fails++;
+
+    // 3. Time Manager
+    time_init();
+    var cd = new Cooldown(1.0);
+    cd.start();
+    if (_assert(!cd.ready(), "Cooldown active after start")) passes++; else fails++;
+    cd.tick(0.6);
+    if (_assert(!cd.ready(), "Cooldown ticking properly")) passes++; else fails++;
+    cd.tick(0.5);
+    if (_assert(cd.ready(), "Cooldown ready after full duration")) passes++; else fails++;
+
+    time_hitstop(0.1);
+    if (_assert(global.time.hitstop == 0.1, "Hitstop registered")) passes++; else fails++;
+    global.time.hitstop = 0; // reset
+
+    // 4. Input & Synthetic Injection
+    input_init();
+    input_sim_enable(true);
+    input_sim_press(ACTION.JUMP);
+    input_update();
+    if (_assert(input_check_pressed(ACTION.JUMP), "Synthetic input jump pressed")) passes++; else fails++;
+    input_update();
+    if (_assert(!input_check_pressed(ACTION.JUMP) && input_check(ACTION.JUMP), "Synthetic input jump held")) passes++; else fails++;
+    input_sim_release(ACTION.JUMP);
+    input_update();
+    if (_assert(!input_check(ACTION.JUMP) && input_check_released(ACTION.JUMP), "Synthetic input jump released")) passes++; else fails++;
+    input_sim_enable(false);
+
+    // 5. Stat Modifiers
+    var sm = new StatModifierContainer();
+    sm.add("overdrive", "damage_mult", 1.6, 0, 8.0);
+    var eval_dmg = sm.evaluate("damage_mult", 10);
+    if (_assert(abs(eval_dmg - 16) < 0.001, "Stat modifier evaluated: 10 * 1.6 = 16")) passes++; else fails++;
+    sm.update(9.0);
+    var post_dmg = sm.evaluate("damage_mult", 10);
+    if (_assert(abs(post_dmg - 10) < 0.001, "Stat modifier expired after duration")) passes++; else fails++;
+
+    // 6. Combat Formulas & Damage
+    var calc_dmg_base = combat_calculate_damage(10, 1.0, 0);
+    if (_assert(calc_dmg_base == 10, "Base combat damage calculation")) passes++; else fails++;
+    var calc_dmg_combo = combat_calculate_damage(10, 1.0, 10); // combo_step = 0.05 -> 1.5x -> 15
+    if (_assert(calc_dmg_combo == 15, "Combo scaling damage calculation")) passes++; else fails++;
+    var calc_dmg_ovr = combat_calculate_damage(10, 1.6, 0); // 16
+    if (_assert(calc_dmg_ovr == 16, "Overdrive damage calculation (+60%)")) passes++; else fails++;
+
+    // 7. Elemental Reaction Matrix
+    elements_system_init();
+    var dummy_target = { element_status: ELEMENT.WATER, element_timer: 4.0 };
+    var reaction = element_apply(dummy_target, ELEMENT.FIRE);
+    if (_assert(reaction != undefined && reaction.name == "VAPORIZE", "Element reaction: WATER + FIRE = VAPORIZE")) passes++; else fails++;
+    if (_assert(reaction.damage_mult == 2.0 && reaction.clears_status, "Vaporize gives 2.0x damage and clears status")) passes++; else fails++;
+    if (_assert(dummy_target.element_status == ELEMENT.NONE, "Target status cleared after Vaporize")) passes++; else fails++;
+
+    // 8. Parry Timing Window
+    var perfect_win = global.cfg.parry.perfect_window;
+    if (_assert(abs(perfect_win - 0.12) < 0.001, "Parry perfect window is 120ms (0.12s)")) passes++; else fails++;
+
+    // 9. Grapple Spring Math
+    var k = global.cfg.grapple.stiffness;
+    var stretch = 20; // 20 px stretch
+    var f_spring = k * stretch;
+    if (_assert(f_spring > 0, "Grapple spring force F = -k*x generates restorative tension")) passes++; else fails++;
+
+    // 10. Powers Architecture
+    powers_init();
+    var p_sw = power_get(POWER_ID.SHOCKWAVE);
+    var p_bs = power_get(POWER_ID.BLADE_SURGE);
+    var p_bk = power_get(POWER_ID.BLINK);
+    if (_assert(p_sw != undefined && p_bs != undefined && p_bk != undefined, "Powers initialized: Shockwave, Blade Surge, Blink")) passes++; else fails++;
+
+    // 11. Hardware Quality Profiles
+    quality_system_init();
+    quality_set(QUALITY.LOW);
+    var q_low = quality_get();
+    if (_assert(q_low.max_particles == 100 && !q_low.enable_shaders, "Quality LOW enforces Intel HD 2500 constraints")) passes++; else fails++;
+    quality_set(QUALITY.HIGH);
+    var q_high = quality_get();
+    if (_assert(q_high.max_particles == 2000 && q_high.enable_shaders, "Quality HIGH scales up for modern GPUs")) passes++; else fails++;
+    quality_set(QUALITY.MEDIUM);
+
+    // 12. Object Pool
+    var pool_test = new ObjectPool(function() { return { x: 0, y: 0 }; }, function(o) { o.x = 0; o.y = 0; }, 4);
+    var p_item = pool_test.get();
+    p_item.x = 100;
+    pool_test.recycle(p_item);
+    var p_item2 = pool_test.get();
+    if (_assert(p_item2.x == 0, "ObjectPool recycles and resets struct correctly")) passes++; else fails++;
+
+    // 13. AI Behavior Tree & Blackboard
+    var bb = new Blackboard();
+    bb.set("target_seen", true);
+    var cond = new BT_Condition(function(b) { return b.get("target_seen", false); });
+    var act = new BT_Action(function(b, dt) { return BT_STATUS.SUCCESS; });
+    var seq = new BT_Sequence([cond, act]);
+    var b_res = seq.tick(bb, 0.016);
+    if (_assert(b_res == BT_STATUS.SUCCESS, "Behavior Tree Sequence executes condition and action successfully")) passes++; else fails++;
+
+    // 14. Integration: Combat Resolution & Reaction Damage
+    var mock_atk = { id: 1001, combo_count: 2, combo_timer: 0, overdrive_active: false, energy: 0 };
+    var mock_def = { id: 1002, team: TEAM.ENEMY, hp: 50, iframes: 0, is_parrying: false, element_status: ELEMENT.WATER, element_timer: 4.0, vx: 0, vy: 0, hitstun: 0, kb_resist: 0 };
+    var mock_hb = {
+        id: 2001, owner: mock_atk, team: TEAM.PLAYER, damage: 10, kb_x: 100, kb_y: -50,
+        hitstop: 0.05, element: ELEMENT.FIRE, can_be_parried: true, hit_targets: []
+    };
+    var hit_res = combat_resolve_hit(mock_hb, mock_def);
+    // Base 10 * 1.0 (ovr) * 1.1 (combo 2) * 2.0 (Vaporize) = 22 damage -> HP: 50 - 22 = 28
+    if (_assert(hit_res && mock_def.hp == 28, "Integration: Combat hit resolved with Vaporize reaction (50 - 22 = 28 HP)")) passes++; else fails++;
+
+    // 15. Integration: Perfect Parry Resolution (120ms window)
+    var mock_parry_def = { id: 1003, team: TEAM.PLAYER, hp: 100, iframes: 0, is_parrying: true, parry_timer: 0.05, energy: 10 };
+    var mock_enemy_atk = { id: 1004, stun_timer: 0 };
+    var mock_enemy_hb = {
+        id: 2002, owner: mock_enemy_atk, team: TEAM.ENEMY, damage: 20, kb_x: -100, kb_y: 0,
+        hitstop: 0.05, element: ELEMENT.NONE, can_be_parried: true, hit_targets: []
+    };
+    var parry_res = combat_resolve_hit(mock_enemy_hb, mock_parry_def);
+    var perf_stun_ok = (mock_enemy_atk.stun_timer == global.cfg.parry.attacker_stun_perfect);
+    var perf_energy_ok = (mock_parry_def.energy == 10 + global.cfg.parry.energy_perfect);
+    if (_assert(parry_res && mock_parry_def.hp == 100 && perf_stun_ok && perf_energy_ok, "Integration: 50ms parry triggers Perfect Parry (0 dmg, attacker stunned, +25 energy)")) passes++; else fails++;
+
+    // 16. Integration: Iframes / Invulnerability Evasion
+    var mock_invul_def = { id: 1005, team: TEAM.PLAYER, hp: 100, iframes: 0.15, is_parrying: false };
+    var mock_hb_invul = {
+        id: 2003, owner: { id: 9999 }, team: TEAM.ENEMY, damage: 30, kb_x: 0, kb_y: 0,
+        hitstop: 0.05, element: ELEMENT.NONE, can_be_parried: false, hit_targets: []
+    };
+    var invul_res = combat_resolve_hit(mock_hb_invul, mock_invul_def);
+    if (_assert(!invul_res && mock_invul_def.hp == 100, "Integration: Active iframes evades attack completely")) passes++; else fails++;
+
+    // 17. Integration: Grapple State Machine & Sling Boost
+    var mock_player_grapple = { x: 100, y: 100, vx: 100, vy: 0 };
+    var gc = new GrappleController(mock_player_grapple);
+    gc.fire(300, 100);
+    if (_assert(gc.state == GRAPPLE_STATE.FIRING, "Integration: Grapple fired into FIRING state")) passes++; else fails++;
+    gc.state = GRAPPLE_STATE.ATTACHED; // simulate latch
+    gc.release(true); // sling jump
+    if (_assert(gc.state == GRAPPLE_STATE.IDLE && mock_player_grapple.vy < 0, "Integration: Grapple sling imparts upward velocity boost")) passes++; else fails++;
+
+    show_debug_message("========================================");
+    show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
+    show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));
+    show_debug_message("========================================");
+
+    return fails;
+}

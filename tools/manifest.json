@@ -1,0 +1,72 @@
+{
+  "script_folders": {
+    "qz_macros": "Scripts/Core",
+    "qz_config": "Scripts/Core",
+    "qz_math": "Scripts/Core",
+    "qz_events": "Scripts/Core",
+    "qz_time": "Scripts/Core",
+    "qz_input": "Scripts/Core",
+    "qz_stats": "Scripts/Gameplay",
+    "qz_combat": "Scripts/Gameplay",
+    "qz_elements": "Scripts/Gameplay",
+    "qz_powers": "Scripts/Gameplay",
+    "qz_grapple": "Scripts/Gameplay",
+    "qz_physics": "Scripts/Gameplay",
+    "qz_interaction": "Scripts/Gameplay",
+    "qz_ai": "Scripts/AI",
+    "qz_quality": "Scripts/Performance",
+    "qz_pool": "Scripts/Performance",
+    "qz_selftest": "Scripts/Debug"
+  },
+  "objects": {
+    "obj_game": { "folder": "Objects/Core", "persistent": true },
+    "obj_camera": { "folder": "Objects/Core" },
+    "obj_debug": { "folder": "Objects/Debug" },
+    "obj_solid": { "folder": "Objects/Environment" },
+    "obj_grapple_anchor": { "folder": "Objects/Environment" },
+    "obj_hitbox": { "folder": "Objects/Combat" },
+    "obj_player": { "folder": "Objects/Gameplay" },
+    "obj_enemy_base": { "folder": "Objects/Enemies" },
+    "obj_enemy_grunt": { "folder": "Objects/Enemies", "parent": "obj_enemy_base" },
+    "obj_enemy_dummy": { "folder": "Objects/Enemies", "parent": "obj_enemy_base" }
+  },
+  "rooms": [
+    {
+      "name": "rm_boot",
+      "width": 1280,
+      "height": 720,
+      "instances": [
+        { "object": "obj_game", "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "name": "rm_arena",
+      "width": 1920,
+      "height": 1080,
+      "bg": 4279505940,
+      "instances": [
+        { "object": "obj_camera", "x": 200, "y": 740 },
+        { "object": "obj_debug", "x": 0, "y": 0 },
+        { "object": "obj_player", "x": 200, "y": 740 },
+        { "object": "obj_solid", "x": 0, "y": 800, "scaleX": 60, "scaleY": 3 },
+        { "object": "obj_solid", "x": 0, "y": 0, "scaleX": 1, "scaleY": 25 },
+        { "object": "obj_solid", "x": 1888, "y": 0, "scaleX": 1, "scaleY": 25 },
+        { "object": "obj_solid", "x": 300, "y": 650, "scaleX": 6, "scaleY": 1 },
+        { "object": "obj_solid", "x": 680, "y": 520, "scaleX": 8, "scaleY": 1 },
+        { "object": "obj_solid", "x": 1120, "y": 420, "scaleX": 7, "scaleY": 1 },
+        { "object": "obj_solid", "x": 1500, "y": 580, "scaleX": 6, "scaleY": 1 },
+        { "object": "obj_solid", "x": 950, "y": 580, "scaleX": 1, "scaleY": 7 },
+        { "object": "obj_grapple_anchor", "x": 396, "y": 480 },
+        { "object": "obj_grapple_anchor", "x": 808, "y": 360 },
+        { "object": "obj_grapple_anchor", "x": 1232, "y": 260 },
+        { "object": "obj_grapple_anchor", "x": 1596, "y": 420 },
+        { "object": "obj_enemy_dummy", "x": 780, "y": 480 },
+        { "object": "obj_enemy_grunt", "x": 1400, "y": 760 }
+      ]
+    }
+  ],
+  "room_order": [
+    "rm_boot",
+    "rm_arena"
+  ]
+}
