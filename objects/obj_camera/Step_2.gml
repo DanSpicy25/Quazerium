@@ -9,14 +9,23 @@ var cfg = global.cfg.camera;
 if (instance_exists(obj_player)) {
     var p = obj_player;
 
-    // Look-ahead based on facing and horizontal velocity
-    var target_look = p.facing * cfg.lookahead_x;
+    // Dynamic lookahead with horizontal velocity scaling
+    var vel_lead = clamp(p.vx * 0.16, -90, 90);
+    var target_look = (p.facing * cfg.lookahead_x) + vel_lead;
     lookahead_x = qz_damp(lookahead_x, target_look, cfg.lookahead_half_life, dt);
 
-    var lookahead_y = clamp(p.vy * 0.12, -40, 80);
+    // Vertical lookahead with downward dive preview
+    var target_look_y = clamp(p.vy * 0.15, -50, 90);
+    if (p.state == PSTATE.SLAM) target_look_y = 110;
 
     target_x = p.x + lookahead_x;
-    target_y = p.y + cfg.offset_y + lookahead_y;
+    target_y = p.y + cfg.offset_y + target_look_y;
+
+    // Cinematic grapple framing bias when attached
+    if (p.state == PSTATE.HOOK && instance_exists(p.grapple)) {
+        target_x = lerp(target_x, p.grapple.hook_x, 0.22);
+        target_y = lerp(target_y, p.grapple.hook_y, 0.22);
+    }
 
     // Follow smoothing (freeze if configured during hitstop)
     if (!global.time.in_hitstop || !cfg.hitstop_freeze_follow) {

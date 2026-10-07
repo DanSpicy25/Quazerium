@@ -137,3 +137,4 @@ Exit Code: 0 (SUCCESS)
 1. **Contenido de Enemigos (Fase 04):** Actualmente solo existen `obj_enemy_grunt` y `obj_enemy_dummy`. Se recomienda expandir a tipos con comportamientos diferenciados (tirador a distancia, bruto con escudo blindado, unidad rápida voladora).
 2. **Audio Assets Físicos:** El despachador de audio cuenta con hooks síncronos listos con modulación de pitch; cuando se añadan archivos `.wav`/`.ogg` al proyecto, sonarán instantáneamente sin tocar código de gameplay.
 3. **Shader de Distorsión Térmica:** En perfil HIGH, se puede añadir una superficie de refracción para el colapso cuántico del Blink y la explosión de vapor de Vaporize.
+

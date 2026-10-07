@@ -4,6 +4,7 @@
 // =====================================================================
 
 var dt = qz_raw_dt();
+time_t += dt;
 
 for (var i = 0; i < ambient_count; i++) {
     var d = dust[i];

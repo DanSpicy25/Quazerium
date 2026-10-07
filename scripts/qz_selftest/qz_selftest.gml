@@ -241,6 +241,19 @@ function qz_run_selftest() {
     events_emit(EVT.POWER, { name: "Blink" });
     if (_assert(global.audio.recent_log[0] == "POWER_BLINK", "Audio: Dispatcher captures EVT.POWER event with power name")) passes++; else fails++;
 
+    // 26. Camera: Extended Combat Reaction Mapping
+    var cam_r_react = global.cfg.camera.reactions[EVT.ELEMENT_REACTION];
+    var cam_r_kill  = global.cfg.camera.reactions[EVT.ENTITY_KILLED];
+    if (_assert(cam_r_react != undefined && cam_r_kill != undefined && cam_r_kill.trauma > 0, "Camera: ELEMENT_REACTION and ENTITY_KILLED have valid trauma profiles")) passes++; else fails++;
+
+    // 27. Environment: Lighting Profile Compliance
+    quality_set(QUALITY.LOW);
+    var q_light_low = quality_get().enable_lighting;
+    quality_set(QUALITY.HIGH);
+    var q_light_high = quality_get().enable_lighting;
+    quality_set(QUALITY.MEDIUM);
+    if (_assert(!q_light_low && q_light_high, "Environment: 2D Lighting strictly disabled on LOW and enabled on HIGH")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

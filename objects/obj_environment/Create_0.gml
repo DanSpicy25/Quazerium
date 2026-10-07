@@ -1,21 +1,31 @@
 // =====================================================================
-// QUAZERIUM — OBJ_ENVIRONMENT: Arena Background & Atmospheric Layer.
-// Deep industrial cyberpunk parallax, atmospheric haze & ambient dust.
+// QUAZERIUM — OBJ_ENVIRONMENT: Arena Background, Lighting & Foreground Layer.
+// 4-plane composition: Deep skyline, mid industrial trusses, playspace lighting & foreground framing.
 // =====================================================================
 
-depth = 500; // Far behind all gameplay geometry
+depth = 500; // Far background layer
 
-// Ambient dust particles
-ambient_count = (global.quality_level == QUALITY.LOW) ? 20 : 60;
+time_t = 0;
+
+// Ambient atmospheric dust motes
+var q = quality_get();
+ambient_count = (global.quality_level == QUALITY.LOW) ? 20 : ((global.quality_level == QUALITY.HIGH) ? 100 : 50);
 dust = array_create(ambient_count);
 for (var i = 0; i < ambient_count; i++) {
     dust[i] = {
         x: random(room_width),
         y: random(room_height),
-        vx: random_range(-15, 25),
-        vy: random_range(-10, -25),
-        alpha: random_range(0.15, 0.45),
+        vx: random_range(-18, 28),
+        vy: random_range(-12, -30),
+        alpha: random_range(0.12, 0.40),
         size: random_range(1, 2.5)
     };
 }
 
+// Industrial arena spotlights over key platforms
+spotlights = [
+    { x: 390,  y: 400, span: 180, col: make_color_rgb(0, 180, 220), alpha: 0.12 },
+    { x: 800,  y: 300, span: 220, col: make_color_rgb(255, 200, 80), alpha: 0.10 },
+    { x: 1200, y: 220, span: 200, col: make_color_rgb(0, 200, 240), alpha: 0.12 },
+    { x: 1550, y: 350, span: 210, col: make_color_rgb(255, 120, 40), alpha: 0.10 }
+];

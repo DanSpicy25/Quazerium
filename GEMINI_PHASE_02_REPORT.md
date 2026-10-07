@@ -53,3 +53,4 @@ Al iniciar la Fase 02:
 
 ## 4. Estado de Transición a Fase 03
 El movimiento del jugador es responsivo, expresivo y con feedback visual pulido. El proyecto está listo para la Fase 03: Combate, VFX de Poderes, Elementos y Overdrive.
+
