@@ -39,10 +39,14 @@ if (state != ESTATE.STUNNED) {
                 facing = (p.x < x) ? -1 : 1;
                 if (dist_to_p <= attack_range && attack_cd_timer <= 0) {
                     state = ESTATE.WINDUP;
-                    windup_timer = global.cfg.enemy.grunt.windup;
+                    windup_timer = windup_val;
                     events_emit(EVT.ENEMY_ATTACK_WINDUP, id);
                 } else {
-                    vx = qz_approach(vx, facing * speed_val, accel_val * dt);
+                    if (keep_dist > 0 && dist_to_p < keep_dist) {
+                        vx = qz_approach(vx, -facing * speed_val, accel_val * dt);
+                    } else {
+                        vx = qz_approach(vx, facing * speed_val, accel_val * dt);
+                    }
                 }
             }
             break;
@@ -52,14 +56,17 @@ if (state != ESTATE.STUNNED) {
             windup_timer -= dt;
             if (windup_timer <= 0) {
                 state = ESTATE.ATTACK;
-                attack_timer = global.cfg.enemy.grunt.active;
+                attack_timer = active_val;
                 events_emit(EVT.ENEMY_ATTACK, id);
 
-                // Spawn attack hitbox
-                var ox = (facing > 0) ? x + 10 : x - 10 - 44;
-                hitbox_spawn(id, TEAM.ENEMY, ox, y - 15, 44, 30,
-                             damage_val, kb_val * facing, -kb_up_val,
-                             hitstop_val, ELEMENT.NONE, true, attack_timer);
+                if (is_callable(attack_execute_fn)) {
+                    attack_execute_fn();
+                } else {
+                    var ox = (facing > 0) ? x + 10 : x - 10 - atk_w_val;
+                    hitbox_spawn(id, TEAM.ENEMY, ox, y - 15, atk_w_val, atk_h_val,
+                                 damage_val, kb_val * facing, -kb_up_val,
+                                 hitstop_val, element_status, true, attack_timer);
+                }
             }
             break;
 
@@ -67,7 +74,7 @@ if (state != ESTATE.STUNNED) {
             attack_timer -= dt;
             if (attack_timer <= 0) {
                 state = ESTATE.RECOVER;
-                recover_timer = global.cfg.enemy.grunt.recover;
+                recover_timer = recover_val;
             }
             break;
 
@@ -75,7 +82,7 @@ if (state != ESTATE.STUNNED) {
             recover_timer -= dt;
             if (recover_timer <= 0) {
                 state = ESTATE.IDLE;
-                attack_cd_timer = global.cfg.enemy.grunt.attack_cooldown;
+                attack_cd_timer = attack_cooldown_val;
             }
             break;
     }
@@ -90,6 +97,7 @@ physics_move_and_collide(id, dt);
 // 5. Death
 if (hp <= 0) {
     state = ESTATE.DEAD;
+    events_emit(EVT.ENTITY_KILLED, { victim: id, type: name, score: score_val, x: x, y: y });
     instance_destroy();
 }
 

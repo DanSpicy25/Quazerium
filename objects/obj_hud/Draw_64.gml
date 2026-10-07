@@ -403,6 +403,90 @@ if (quality_notify_timer > 0) {
 }
 
 // =====================================================================
+// 5B. TOP-CENTER: ENCOUNTER DIRECTOR HUD & SCORE TRACKER
+// =====================================================================
+if (variable_global_exists("director")) {
+    var d = global.director;
+    var cur_enc_idx = d.current_encounter_idx;
+    var total_enc_num = array_length(d.encounters);
+    var enc_data = d.encounters[cur_enc_idx];
+
+    // --- A. TOP TACTICAL COMBAT BAR ---
+    if (d.state == ENCOUNTER_STATE.COMBAT || d.state == ENCOUNTER_STATE.SPAWNING) {
+        var top_bx = 400;
+        var top_by = 18;
+        var top_bw = 480;
+        var top_bh = 30;
+
+        draw_set_color(c_dark_obsidian);
+        draw_set_alpha(0.88);
+        draw_rectangle(top_bx, top_by, top_bx + top_bw, top_by + top_bh, false);
+        draw_set_color(c_panel_border);
+        draw_set_alpha(1.0);
+        draw_rectangle(top_bx, top_by, top_bx + top_bw, top_by + top_bh, true);
+
+        // Encounter tag
+        draw_set_color(c_cyan_neon);
+        draw_text(top_bx + 10, top_by + 7, "ENC " + string(cur_enc_idx + 1) + "/" + string(total_enc_num) + " W" + string(d.current_wave_idx + 1));
+
+        // Active foes count
+        var c_foe = (d.active_enemies > 0) ? c_crimson_burn : c_emerald_tech;
+        draw_set_color(c_foe);
+        draw_set_halign(fa_center);
+        draw_text(top_bx + (top_bw / 2), top_by + 7, string(d.active_enemies) + " HOSTILES");
+        draw_set_halign(fa_left);
+
+        // Total score
+        draw_set_halign(fa_right);
+        draw_set_color(c_gold_bright);
+        draw_text(top_bx + top_bw - 10, top_by + 7, "SCORE " + string(d.total_score));
+        draw_set_halign(fa_left);
+    }
+    // --- B. INTRO BANNER ---
+    else if (d.state == ENCOUNTER_STATE.INTRO) {
+        var intro_w = 540;
+        var intro_h = 60;
+        var intro_x = 640 - (intro_w / 2);
+        var intro_y = 120;
+
+        draw_set_color(c_dark_obsidian);
+        draw_set_alpha(0.92);
+        draw_rectangle(intro_x, intro_y, intro_x + intro_w, intro_y + intro_h, false);
+        draw_set_color(c_cyan_neon);
+        draw_set_alpha(1.0);
+        draw_rectangle(intro_x, intro_y, intro_x + intro_w, intro_y + intro_h, true);
+
+        draw_set_halign(fa_center);
+        draw_set_color(c_gold_bright);
+        draw_text(640, intro_y + 10, ">> ENCOUNTER 0" + string(cur_enc_idx + 1) + " // SECTOR ACTIVE <<");
+        draw_set_color(c_white);
+        draw_text(640, intro_y + 32, enc_data.name);
+        draw_set_halign(fa_left);
+    }
+    // --- C. WAVE / ENCOUNTER CLEAR BANNER ---
+    else if (d.state == ENCOUNTER_STATE.CLEAR) {
+        var clr_w = 480;
+        var clr_h = 56;
+        var clr_x = 640 - (clr_w / 2);
+        var clr_y = 130;
+
+        draw_set_color(c_dark_obsidian);
+        draw_set_alpha(0.92);
+        draw_rectangle(clr_x, clr_y, clr_x + clr_w, clr_y + clr_h, false);
+        draw_set_color(c_emerald_tech);
+        draw_set_alpha(1.0);
+        draw_rectangle(clr_x, clr_y, clr_x + clr_w, clr_y + clr_h, true);
+
+        draw_set_halign(fa_center);
+        draw_set_color(c_emerald_tech);
+        draw_text(640, clr_y + 8, "// SECTOR SECURED // ENCOUNTER CLEARED //");
+        draw_set_color(c_white);
+        draw_text(640, clr_y + 30, "TIME: " + string_format(d.encounter_time, 1, 1) + "s  |  PTS: +" + string(d.encounter_score));
+        draw_set_halign(fa_left);
+    }
+}
+
+// =====================================================================
 // 6. BOTTOM-RIGHT: MINIMALIST TACTICAL CONTROLS LEGEND
 // =====================================================================
 var leg_rx = 1256;
@@ -468,6 +552,92 @@ if (is_player_dead || p.hp <= 0) {
     draw_set_alpha(1.0);
 }
 
+// =====================================================================
+// 8. CONTEXTUAL OVERLAY: VICTORY PROTOCOL / CAMPAIGN CONQUERED
+// =====================================================================
+if (variable_global_exists("director") && global.director.state == ENCOUNTER_STATE.VICTORY) {
+    var d = global.director;
+
+    // Dark screen fade
+    draw_set_color(c_black);
+    draw_set_alpha(0.82);
+    draw_rectangle(0, 0, 1280, 720, false);
+
+    // Victory Card
+    var vic_cx = 640;
+    var vic_cy = 360;
+    var vic_w  = 620;
+    var vic_h  = 340;
+    var v_x1   = vic_cx - (vic_w / 2);
+    var v_y1   = vic_cy - (vic_h / 2);
+    var v_x2   = vic_cx + (vic_w / 2);
+    var v_y2   = vic_cy + (vic_h / 2);
+
+    draw_set_color(c_dark_obsidian);
+    draw_set_alpha(0.96);
+    draw_rectangle(v_x1, v_y1, v_x2, v_y2, false);
+    draw_set_color(c_gold_bright);
+    draw_set_alpha(1.0);
+    draw_rectangle(v_x1, v_y1, v_x2, v_y2, true);
+    draw_set_color(c_panel_border);
+    draw_rectangle(v_x1 + 4, v_y1 + 4, v_x2 - 4, v_y2 - 4, true);
+
+    // Header Title
+    draw_set_halign(fa_center);
+    draw_set_color(c_gold_bright);
+    draw_text_transformed(vic_cx, v_y1 + 22, "// ARENA TRIAL CONQUERED //", 1.3, 1.3, 0);
+
+    draw_set_color(c_cyan_neon);
+    draw_text(vic_cx, v_y1 + 54, "ALL 5 SECTORS PURIFIED // APEX PROTOCOL FULFILLED");
+
+    // Divider Line
+    draw_set_color(c_panel_border);
+    draw_line(v_x1 + 30, v_y1 + 78, v_x2 - 30, v_y1 + 78);
+
+    // Rating Badge
+    var rank_str = "S";
+    var c_badge = c_gold_bright;
+    if (d.total_score >= 12000) { rank_str = "S"; c_badge = c_gold_bright; }
+    else if (d.total_score >= 8000) { rank_str = "A"; c_badge = c_crimson_burn; }
+    else if (d.total_score >= 5000) { rank_str = "B"; c_badge = c_cyan_neon; }
+    else { rank_str = "C"; c_badge = c_emerald_tech; }
+
+    draw_set_color(c_badge);
+    draw_text_transformed(vic_cx - 180, v_y1 + 130, rank_str, 3.5, 3.5, 0);
+    draw_set_color(c_steel_muted);
+    draw_text(vic_cx - 180, v_y1 + 200, "FINAL RANK");
+
+    // Statistics Grid
+    draw_set_halign(fa_left);
+    var stat_x = vic_cx - 60;
+    var stat_y = v_y1 + 104;
+    var line_gap = 26;
+
+    draw_set_color(c_steel_muted); draw_text(stat_x, stat_y, "FINAL SCORE:");
+    draw_set_color(c_gold_bright); draw_text(stat_x + 160, stat_y, string(d.total_score));
+
+    draw_set_color(c_steel_muted); draw_text(stat_x, stat_y + line_gap, "TOTAL TIME:");
+    draw_set_color(c_white); draw_text(stat_x + 160, stat_y + line_gap, string_format(d.total_time, 1, 1) + "s");
+
+    draw_set_color(c_steel_muted); draw_text(stat_x, stat_y + (line_gap * 2), "HOSTILES PURGED:");
+    draw_set_color(c_white); draw_text(stat_x + 160, stat_y + (line_gap * 2), string(d.total_kills));
+
+    draw_set_color(c_steel_muted); draw_text(stat_x, stat_y + (line_gap * 3), "PARRIES DEFLECTED:");
+    draw_set_color(c_white); draw_text(stat_x + 160, stat_y + (line_gap * 3), string(d.total_parries));
+
+    draw_set_color(c_steel_muted); draw_text(stat_x, stat_y + (line_gap * 4), "MAX COMBO CHAIN:");
+    draw_set_color(c_white); draw_text(stat_x + 160, stat_y + (line_gap * 4), string(d.max_combo) + " HITS");
+
+    // Reboot prompt
+    draw_set_halign(fa_center);
+    var replay_pulse = 0.7 + (sin(current_time * 0.015) * 0.3);
+    draw_set_color(c_gold_bright);
+    draw_set_alpha(replay_pulse);
+    draw_text(vic_cx, v_y2 - 38, "PRESS [R] OR [SPACE] TO REPLAY TRIAL");
+    draw_set_alpha(1.0);
+    draw_set_halign(fa_left);
+}
+
 // ---------------------------------------------------------------------
 // CLEANUP DRAW STATE
 // ---------------------------------------------------------------------
@@ -475,3 +645,4 @@ draw_set_alpha(1.0);
 draw_set_color(c_white);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
+

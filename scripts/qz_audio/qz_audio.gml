@@ -97,5 +97,30 @@ function audio_system_init() {
         // Sling release whistle
         global.audio.recent_log[0] = "GRAPPLE_SLING";
     }, "qz_audio");
+
+    events_subscribe(EVT.ENCOUNTER_START, function(evt, data) {
+        // High-tension horn / alarm klaxon
+        global.audio.recent_log[0] = "ENCOUNTER_START";
+    }, "qz_audio");
+
+    events_subscribe(EVT.ENCOUNTER_WAVE, function(evt, data) {
+        // Warp surge / radar ping
+        global.audio.recent_log[0] = "ENCOUNTER_WAVE";
+    }, "qz_audio");
+
+    events_subscribe(EVT.ENCOUNTER_CLEAR, function(evt, data) {
+        // Sector clear chime
+        global.audio.recent_log[0] = "ENCOUNTER_CLEAR";
+    }, "qz_audio");
+
+    events_subscribe(EVT.ENCOUNTER_VICTORY, function(evt, data) {
+        // Grand victory fanfare
+        global.audio.recent_log[0] = "ENCOUNTER_VICTORY";
+    }, "qz_audio");
+
+    events_subscribe(EVT.HAZARD_TRIGGERED, function(evt, data) {
+        // High voltage electric sizzle / discharge
+        global.audio.recent_log[0] = "HAZARD_TRIGGERED";
+    }, "qz_audio");
 }
 

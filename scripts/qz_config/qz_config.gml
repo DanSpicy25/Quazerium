@@ -78,10 +78,23 @@ function qz_config_init() {
         enemy: {
             grunt: { hw: 16, hh: 16, hp: 60, speed: 140, accel: 1400, aggro_range: 420, attack_range: 56,
                      windup: 0.45, active: 0.12, recover: 0.5, attack_cooldown: 1.0, damage: 10, kb: 380, kb_up: 120,
-                     atk_w: 44, atk_h: 30, atk_ox: 28, atk_oy: 0, hitstop: 0.05, stationary: false, attack_interval: 0, kb_resist: 0 },
+                     atk_w: 44, atk_h: 30, atk_ox: 28, atk_oy: 0, hitstop: 0.05, stationary: false, attack_interval: 0, kb_resist: 0, score: 100 },
+            fast: { hw: 13, hh: 13, hp: 35, speed: 250, accel: 2400, aggro_range: 520, attack_range: 85,
+                    windup: 0.22, active: 0.10, recover: 0.30, attack_cooldown: 0.70, damage: 8, kb: 260, kb_up: 80,
+                    atk_w: 36, atk_h: 24, atk_ox: 22, atk_oy: 0, hitstop: 0.04, stationary: false, attack_interval: 0, kb_resist: 0, score: 150 },
+            ranged: { hw: 14, hh: 16, hp: 45, speed: 110, accel: 1000, aggro_range: 680, attack_range: 520, keep_dist: 260,
+                      windup: 0.65, active: 0.10, recover: 0.65, attack_cooldown: 1.8, damage: 12, kb: 220, kb_up: 60,
+                      atk_w: 16, atk_h: 16, atk_ox: 0, atk_oy: 0, hitstop: 0.05, stationary: false, attack_interval: 0, kb_resist: 0.1, score: 200,
+                      projectile_speed: 380 },
+            heavy: { hw: 22, hh: 26, hp: 160, speed: 75, accel: 800, aggro_range: 400, attack_range: 75,
+                     windup: 0.85, active: 0.20, recover: 0.85, attack_cooldown: 1.8, damage: 24, kb: 520, kb_up: 220,
+                     atk_w: 68, atk_h: 36, atk_ox: 34, atk_oy: 0, hitstop: 0.08, stationary: false, attack_interval: 0, kb_resist: 0.70, score: 350 },
+            elite: { hw: 18, hh: 22, hp: 220, speed: 175, accel: 1800, aggro_range: 550, attack_range: 65,
+                     windup: 0.35, active: 0.14, recover: 0.40, attack_cooldown: 0.85, damage: 16, kb: 420, kb_up: 140,
+                     atk_w: 52, atk_h: 32, atk_ox: 30, atk_oy: 0, hitstop: 0.06, stationary: false, attack_interval: 0, kb_resist: 0.40, score: 500 },
             dummy: { hw: 18, hh: 20, hp: 99999, speed: 0, accel: 0, aggro_range: 300, attack_range: 60,
                      windup: 0.5, active: 0.12, recover: 0.6, attack_cooldown: 2.5, damage: 8, kb: 300, kb_up: 100,
-                     atk_w: 44, atk_h: 30, atk_ox: 28, atk_oy: 0, hitstop: 0.05, stationary: true, attack_interval: 2.5, kb_resist: 1 },
+                     atk_w: 44, atk_h: 30, atk_ox: 28, atk_oy: 0, hitstop: 0.05, stationary: true, attack_interval: 2.5, kb_resist: 1, score: 0 },
         },
 
         camera: {
@@ -110,6 +123,10 @@ function qz_config_init() {
     r[EVT.POWER]            = { trauma: 0.25, impulse: 8,  zoom: 0.02 };
     r[EVT.ELEMENT_REACTION] = { trauma: 0.22, impulse: 8,  zoom: 0.02 };
     r[EVT.ENTITY_KILLED]    = { trauma: 0.28, impulse: 10, zoom: 0.03 };
+    r[EVT.ENCOUNTER_START]  = { trauma: 0.20, impulse: 0,  zoom: 0.05 };
+    r[EVT.ENCOUNTER_CLEAR]  = { trauma: 0.25, impulse: 0,  zoom: 0.06 };
+    r[EVT.ENCOUNTER_VICTORY]= { trauma: 0.40, impulse: 0,  zoom: 0.10 };
+    r[EVT.HAZARD_TRIGGERED] = { trauma: 0.30, impulse: 8,  zoom: 0.02 };
     global.cfg.camera.reactions = r;
 }
 

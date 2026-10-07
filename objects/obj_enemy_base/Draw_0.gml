@@ -17,20 +17,24 @@ if (hit_flash > 0) {
 }
 
 // 1. Armored Automaton Frame
-draw_set_color(c_body);
-draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, false);
-draw_set_color(c_rim);
-draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, true);
+if (is_callable(draw_body_fn)) {
+    draw_body_fn(c_body, c_rim);
+} else {
+    draw_set_color(c_body);
+    draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, false);
+    draw_set_color(c_rim);
+    draw_rectangle(x - bbox_hw, y - bbox_hh, x + bbox_hw, y + bbox_hh, true);
 
-// Center core reactor
-draw_set_color(c_rim);
-draw_circle(x, y - 2, 4, false);
+    // Center core reactor
+    draw_set_color(c_rim);
+    draw_circle(x, y - 2, 4, false);
 
-// Sensor eye
-var eye_x = x + (facing * (bbox_hw - 4));
-var eye_y = y - 6;
-draw_set_color(c_white);
-draw_circle(eye_x, eye_y, 2.5, false);
+    // Sensor eye
+    var eye_x = x + (facing * (bbox_hw - 4));
+    var eye_y = y - 6;
+    draw_set_color(c_white);
+    draw_circle(eye_x, eye_y, 2.5, false);
+}
 
 // 2. Windup Telegraph Indicator (Crucial Parry Cue!)
 if (state == ESTATE.WINDUP) {

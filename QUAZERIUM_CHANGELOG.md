@@ -4,6 +4,29 @@
 
 ---
 
+## [0.2.0] — 2026-10-06 — FASE 08: EXPANSIÓN DE CONTENIDO Y ENCUENTROS JUGABLES
+### Agregado
+- **Director de Encuentros (`scripts/qz_director`, `obj_director`):** Orquestación centralizada de 5 encuentros tácticos diseñados a mano con oleadas progresivas y evaluación de victoria.
+- **Catálogo de 5 Arquetipos de Enemigos:**
+  - `obj_enemy_grunt`: Autómata bípedo con corte frontal básico.
+  - `obj_enemy_fast`: Hostigador ultrarrápido con lunge cinético a 460 px/s y cuchillas dobles.
+  - `obj_enemy_ranged`: Dron artillero flotante con lente cíclope y pernos de plasma teledirigidos.
+  - `obj_enemy_heavy`: Juggernaut con blindaje de grafito y martillazo sísmico al suelo con onda expansiva.
+  - `obj_enemy_elite`: Ejecutor Apex con corona dorada, sables dobles y ráfaga de combate avanzada.
+- **Mecánica de Proyectiles Parriables (`obj_projectile_enemy`):**
+  - Desvío con normal parry y **reflexión violenta hacia enemigos con Perfect Parry** (velocidad $+160\%$, daño multiplicado a 30, color cian neón).
+- **Sistema de Spawn Seguro (`obj_enemy_spawner`):**
+  - Balizas de advertencia holográfica previas de 0.75s para prevenir materializaciones injustas sobre el jugador.
+- **Elementos Interactivos y Peligros de Escenario:**
+  - `obj_hazard_electric`: Suelo electrificado cíclico (Dormant -> Warning -> Surge) que daña y aturde tanto a jugadores como a enemigos empujados hacia él.
+  - `obj_launch_pad`: Placas de impulso neumático que lanzan al jugador o enemigos a $-860\text{ px/s}$.
+  - `obj_energy_canister`: Capacitores destruibles que detonan con explosión elemental, dañan enemigos en 110 px y recargan $+25$ de energía.
+- **HUD Táctico y Pantalla de Victoria Final:**
+  - Conteo de hostiles activos, banner de encuentro, puntuación en tiempo real y tarjeta de victoria final con calificación de rango (D a S).
+- **Expansión de la Suite de Pruebas (Tests 48 a 55):** 55 pruebas automatizadas pasando con éxito (`pass=55 fail=0`).
+
+---
+
 ## [0.1.0-rc1] — 2026-10-06 — FASE 07: AUDITORÍA FINAL, VERIFICACIÓN Y RELEASE
 ### Agregado
 - **Auditoría Técnica Completa:** Generación de `QUAZERIUM_FINAL_STATUS.md` con clasificación rigurosa de los 19 scripts y 13 objetos del proyecto (CORE, PRESENTATION, ENVIRONMENT, CONFIG, TEST).

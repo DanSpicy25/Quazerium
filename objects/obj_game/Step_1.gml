@@ -18,7 +18,7 @@ if (keyboard_check_pressed(vk_f2)) {
     quality_set(next_q);
 }
 
-if (keyboard_check_pressed(vk_f5)) {
+if (keyboard_check_pressed(vk_f5) || keyboard_check_pressed(ord("R"))) {
     room_restart();
 }
 
