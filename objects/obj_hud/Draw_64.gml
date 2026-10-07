@@ -182,3 +182,4 @@ draw_set_halign(fa_right);
 draw_set_color(make_color_rgb(110, 125, 140));
 draw_text(leg_rx, leg_ry, "[A/D] Move  [Space] Jump  [Shift] Dash  [J] Attack  [K] Parry  [E] Grapple  [F1] Telemetry");
 draw_set_halign(fa_left);
+

@@ -26,3 +26,4 @@ if (instance_exists(obj_player) && obj_player.overdrive_active) {
     draw_rectangle(gw - b_thick, 0, gw, gh, false);
     draw_set_alpha(1.0);
 }
+

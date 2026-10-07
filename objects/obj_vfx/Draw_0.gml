@@ -20,3 +20,4 @@ if (use_additive) {
 
 // 3. Floating Combat Text
 text_pool.draw();
+

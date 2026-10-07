@@ -209,3 +209,4 @@ Pruebas cubiertas:
 1. Importar archivos de audio finales `.wav` / `.ogg` vinculados a los identificadores en `qz_audio.gml`.
 2. Añadir tipos adicionales de enemigos voladores o a distancia heredando de `obj_enemy_base`.
 3. Diseñar salas adicionales y transiciones de niveles sobre la estructura de `rm_arena`.
+

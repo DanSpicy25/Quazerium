@@ -12,3 +12,4 @@ decal_pool.update(dt);
 if (flash_alpha > 0) {
     flash_alpha = max(0, flash_alpha - (flash_decay * dt));
 }
+

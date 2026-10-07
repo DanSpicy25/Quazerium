@@ -131,7 +131,9 @@ switch (state) {
             coyote_timer = 0;
             vy = -pcfg.jump_speed;
             state = PSTATE.JUMP;
-            events_emit(EVT.JUMP, id);
+            squash_x = 0.75;
+            squash_y = 1.35;
+            events_emit(EVT.JUMP, { player: id, x: x, y: y + bbox_hh });
         }
 
         // Variable jump cut
@@ -145,6 +147,8 @@ switch (state) {
             jump_buffer_timer = 0;
             interaction_wall_jump(id, wall_dir);
             state = PSTATE.JUMP;
+            squash_x = 0.8;
+            squash_y = 1.3;
         }
 
         // Dash trigger
@@ -173,7 +177,8 @@ switch (state) {
             slam_hang_timer = pcfg.slam_hang;
             vx = 0;
             vy = 0;
-            events_emit(EVT.SLAM, id);
+            squash_x = 0.70;
+            squash_y = 1.40;
         }
 
         // Attack trigger / Charging
@@ -240,7 +245,10 @@ switch (state) {
                 var r = pcfg.slam_radius;
                 hitbox_spawn(id, TEAM.PLAYER, x - r, y - r, r * 2, r * 2,
                              pcfg.slam_damage, 0, -pcfg.slam_knockback, 0.08, active_element, false, 0.1);
-                events_emit(EVT.LAND, id);
+                squash_x = 1.60;
+                squash_y = 0.50;
+                events_emit(EVT.SLAM, { player: id, x: x, y: y });
+                events_emit(EVT.LAND, { player: id, vy: pcfg.slam_speed });
                 state = PSTATE.IDLE;
             }
         }

@@ -17,3 +17,4 @@ if (instance_exists(obj_player)) {
 if (combo_scale > 1.0) {
     combo_scale = qz_approach(combo_scale, 1.0, 3.0 * dt);
 }
+

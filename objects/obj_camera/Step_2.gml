@@ -13,8 +13,10 @@ if (instance_exists(obj_player)) {
     var target_look = p.facing * cfg.lookahead_x;
     lookahead_x = qz_damp(lookahead_x, target_look, cfg.lookahead_half_life, dt);
 
+    var lookahead_y = clamp(p.vy * 0.12, -40, 80);
+
     target_x = p.x + lookahead_x;
-    target_y = p.y + cfg.offset_y;
+    target_y = p.y + cfg.offset_y + lookahead_y;
 
     // Follow smoothing (freeze if configured during hitstop)
     if (!global.time.in_hitstop || !cfg.hitstop_freeze_follow) {

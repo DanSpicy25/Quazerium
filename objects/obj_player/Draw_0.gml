@@ -77,6 +77,38 @@ draw_line_width(x + (hw * 0.6), py - hh + 4, x + (hw * 0.6), py + (hh * 0.6), 2)
 draw_set_color(c_trim);
 draw_rectangle(x - hw, py - hh, x + hw, py + hh, true);
 
+// Articulated Cybernetic Limbs (Pose-aware)
+draw_set_color(c_chassis_dark);
+var leg_bot = y + bbox_hh;
+if (state == PSTATE.RUN) {
+    var leg_swing = sin(run_anim_t) * 9;
+    draw_line_width(x - 4, py + hh, x - 4 + (leg_swing * facing), leg_bot, 3);
+    draw_line_width(x + 4, py + hh, x + 4 - (leg_swing * facing), leg_bot, 3);
+    draw_set_color(c_trim);
+    draw_point(x - 4 + (leg_swing * facing), leg_bot);
+    draw_point(x + 4 - (leg_swing * facing), leg_bot);
+} else if (state == PSTATE.JUMP) {
+    draw_line_width(x - 4, py + hh, x - 4 - (facing * 2), py + hh + 6, 3);
+    draw_line_width(x + 4, py + hh, x + 4 - (facing * 4), py + hh + 8, 3);
+} else if (state == PSTATE.FALL) {
+    draw_line_width(x - 4, py + hh, x - 6, py + hh + 4, 3);
+    draw_line_width(x + 4, py + hh, x + 6, py + hh + 4, 3);
+} else if (state == PSTATE.DASH) {
+    draw_line_width(x - 4, py + hh, x - (dash_dir_x * 14), py - (dash_dir_y * 14), 3);
+} else if (state == PSTATE.SLAM) {
+    draw_line_width(x - 3, py + hh, x - 3, py + hh + 8, 3);
+    draw_line_width(x + 3, py + hh, x + 3, py + hh + 8, 3);
+    // Vertical descent blade
+    draw_set_color(c_white);
+    draw_line_width(x, py + hh, x, py + hh + 22, 3);
+    draw_set_color(c_trim);
+    draw_line_width(x, py + hh, x, py + hh + 22, 5);
+} else {
+    // Braced combat idle stance
+    draw_line_width(x - 4, py + hh, x - 6, leg_bot, 3);
+    draw_line_width(x + 4, py + hh, x + 6, leg_bot, 3);
+}
+
 // Cyber Visor / Optical Eye
 var eye_x = x + (facing * (hw - 4));
 var eye_y = py - (hh * 0.5);
@@ -84,6 +116,14 @@ draw_set_color(c_yellow);
 draw_circle(eye_x, eye_y, 3, false);
 draw_set_color(c_white);
 draw_circle(eye_x, eye_y, 1.5, false);
+
+// Motion eye streak during attack
+if (state == PSTATE.ATTACK) {
+    draw_set_color(c_yellow);
+    draw_set_alpha(0.6);
+    draw_line_width(eye_x, eye_y, eye_x - (facing * 12), eye_y, 2);
+    draw_set_alpha(1.0);
+}
 
 // ---------------------------------------------------------------------
 // 4. WEAPON & ATTACK ARCS (Energy Katana / Saber)

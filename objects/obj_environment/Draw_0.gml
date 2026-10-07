@@ -66,3 +66,4 @@ for (var i = 0; i < ambient_count; i++) {
     }
 }
 draw_set_alpha(1.0);
+

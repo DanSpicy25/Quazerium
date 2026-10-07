@@ -15,3 +15,4 @@ for (var i = 0; i < ambient_count; i++) {
     if (d.y < 0) d.y += room_height;
     if (d.y > room_height) d.y -= room_height;
 }
+

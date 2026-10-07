@@ -16,3 +16,4 @@ events_subscribe(EVT.HIT_CONFIRMED, function(evt, data) {
 events_subscribe(EVT.HIT_CRITICAL, function(evt, data) {
     combo_scale = 1.5;
 }, id);
+

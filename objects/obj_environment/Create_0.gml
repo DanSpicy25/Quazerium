@@ -18,3 +18,4 @@ for (var i = 0; i < ambient_count; i++) {
         size: random_range(1, 2.5)
     };
 }
+

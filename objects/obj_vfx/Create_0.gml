@@ -209,3 +209,37 @@ events_subscribe(EVT.GRAPPLE_SLING, function(evt, data) {
                             3, 1, c_white, c_aqua, 0.25, VFX_SHAPE.STREAK, 0.9);
     }
 }, id);
+
+// 10. Jump, Land & Wall Jump Dust
+events_subscribe(EVT.JUMP, function(evt, data) {
+    var jx = is_struct(data) && variable_struct_exists(data, "x") ? data.x : x;
+    var jy = is_struct(data) && variable_struct_exists(data, "y") ? data.y : y;
+    for (var i = 0; i < 4; i++) {
+        var spd = random_range(-60, 60);
+        particle_pool.spawn(jx, jy, spd, random_range(-10, -30), 0, 80,
+                            4, 1, c_ltgray, c_dkgray, 0.22, VFX_SHAPE.DUST, 0.6);
+    }
+}, id);
+
+events_subscribe(EVT.LAND, function(evt, data) {
+    var lx = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.x : x;
+    var ly = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? (data.player.y + data.player.bbox_hh) : y;
+    for (var i = 0; i < 8; i++) {
+        var dir = (i mod 2 == 0) ? -1 : 1;
+        var spd = random_range(40, 140) * dir;
+        particle_pool.spawn(lx, ly, spd, random_range(-15, -40), 0, 120,
+                            5, 1, c_ltgray, c_dkgray, 0.28, VFX_SHAPE.DUST, 0.65);
+    }
+}, id);
+
+events_subscribe(EVT.WALL_JUMP, function(evt, data) {
+    var wx = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.x : x;
+    var wy = (is_struct(data) && variable_struct_exists(data, "player") && instance_exists(data.player)) ? data.player.y : y;
+    for (var i = 0; i < 6; i++) {
+        var ang = random(360);
+        var spd = random_range(60, 180);
+        particle_pool.spawn(wx, wy, lengthdir_x(spd, ang), lengthdir_y(spd, ang), 0, 100,
+                            2, 0.5, c_white, c_ltgray, 0.2, VFX_SHAPE.STREAK, 0.8);
+    }
+}, id);
+

@@ -278,3 +278,4 @@ function VfxDecalPool(capacity = 48) constructor {
         draw_set_alpha(1.0);
     };
 }
+

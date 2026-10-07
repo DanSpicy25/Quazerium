@@ -35,9 +35,22 @@ cam_event_handler = function(evt, payload) {
         var q_mult = quality_get().shake_mult;
         trauma = clamp(trauma + (r.trauma * q_mult), 0, 1.0);
 
-        // Impulse
+        // Impulse (directional if available, otherwise omnidirectional)
         if (r.impulse > 0) {
             var dir = random(360);
+            if (is_struct(payload)) {
+                if (variable_struct_exists(payload, "dir_x") && variable_struct_exists(payload, "dir_y")) {
+                    dir = point_direction(0, 0, payload.dir_x, payload.dir_y);
+                } else if (variable_struct_exists(payload, "attacker") && variable_struct_exists(payload, "target")) {
+                    var atkr = payload.attacker;
+                    var trgt = payload.target;
+                    if ((is_struct(atkr) || instance_exists(atkr)) && (is_struct(trgt) || instance_exists(trgt))) {
+                        dir = point_direction(atkr.x, atkr.y, trgt.x, trgt.y);
+                    }
+                }
+            } else if (evt == EVT.SLAM) {
+                dir = 270; // downward thrust
+            }
             impulse_vx += lengthdir_x(r.impulse * 30, dir);
             impulse_vy += lengthdir_y(r.impulse * 30, dir);
         }
