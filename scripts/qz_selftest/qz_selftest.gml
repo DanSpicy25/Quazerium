@@ -207,6 +207,40 @@ function qz_run_selftest() {
     audio_system_init();
     if (_assert(global.audio.enabled && is_array(global.audio.recent_log), "Audio: System initialized with valid state")) passes++; else fails++;
 
+    // 22. Powers: Spatial Event Payloads & Activation
+    global.test_power_evt = undefined;
+    var p_sub = function(evt, data) { global.test_power_evt = data; };
+    events_subscribe(EVT.POWER, p_sub, "selftest_power");
+    var mock_p_player = {
+        x: 100, y: 200, energy: 100, vx: 0, vy: 0, facing: 1, active_element: ELEMENT.FIRE,
+        bbox_hw: 10, bbox_hh: 16, iframes: 0, active_power_id: -1, power_timer: 0,
+        power_cooldowns: [new Cooldown(0), new Cooldown(0), new Cooldown(0)]
+    };
+    var act_res = power_try_activate(mock_p_player, POWER_ID.SHOCKWAVE);
+    var p_has_spatial = (global.test_power_evt != undefined && variable_struct_exists(global.test_power_evt, "radius") && global.test_power_evt.x == 100);
+    if (_assert(act_res && p_has_spatial, "Powers: Shockwave emits EVT.POWER with spatial radius and coordinates")) passes++; else fails++;
+    events_unsubscribe_owner("selftest_power");
+
+    // 23. Presentation: Combat Text Anti-Overlap Spacing
+    var vfx_text_overlap = new VfxCombatTextPool(8);
+    vfx_text_overlap.spawn(100, 100, "HIT 10", c_white, 1.0, 0.7);
+    vfx_text_overlap.spawn(100, 100, "HIT 20", c_white, 1.0, 0.7);
+    var t_first = vfx_text_overlap.entries[0];
+    var t_second = vfx_text_overlap.entries[1];
+    if (_assert(t_second.y < t_first.y, "Presentation: Second combat text at same location is spaced upward")) passes++; else fails++;
+
+    // 24. Presentation: Decal Lifetime Bounded by Quality Profile
+    var vfx_decal_prof = new VfxDecalPool(8);
+    quality_set(QUALITY.LOW);
+    vfx_decal_prof.spawn(50, 50, DECAL_TYPE.SCORCH, c_black);
+    var d_prof = vfx_decal_prof.decals[0];
+    if (_assert(d_prof.life == 4.0, "Presentation: Decal defaults to Quality LOW lifetime limit (4.0s)")) passes++; else fails++;
+    quality_set(QUALITY.MEDIUM);
+
+    // 25. Audio: Dispatcher Hook for Powers & Events
+    events_emit(EVT.POWER, { name: "Blink" });
+    if (_assert(global.audio.recent_log[0] == "POWER_BLINK", "Audio: Dispatcher captures EVT.POWER event with power name")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

@@ -57,12 +57,45 @@ function audio_system_init() {
         // Elemental blast
     }, "qz_audio");
 
+    events_subscribe(EVT.POWER, function(evt, data) {
+        // Shockwave detonation / Blade surge ignition / Blink phase shift
+        var p_name = variable_struct_exists(data, "name") ? data.name : "Power";
+        global.audio.recent_log[0] = "POWER_" + string_upper(p_name);
+    }, "qz_audio");
+
+    events_subscribe(EVT.POWER_END, function(evt, data) {
+        // Power dissipate / Surge deceleration
+        global.audio.recent_log[0] = "POWER_END";
+    }, "qz_audio");
+
+    events_subscribe(EVT.OVERDRIVE_END, function(evt, data) {
+        // Vent steam hiss
+        global.audio.recent_log[0] = "OVERDRIVE_END";
+    }, "qz_audio");
+
+    events_subscribe(EVT.ENTITY_KILLED, function(evt, data) {
+        // Automaton destruction crunch
+        global.audio.recent_log[0] = "ENTITY_KILLED";
+    }, "qz_audio");
+
+    events_subscribe(EVT.ELEMENT_CHANGED, function(evt, data) {
+        // Elemental capacitor switch click
+        global.audio.recent_log[0] = "ELEMENT_CHANGED";
+    }, "qz_audio");
+
+    events_subscribe(EVT.ENERGY_FULL, function(evt, data) {
+        // Capacitor charge ready chime
+        global.audio.recent_log[0] = "ENERGY_FULL";
+    }, "qz_audio");
+
     events_subscribe(EVT.GRAPPLE_ATTACH, function(evt, data) {
         // Latch clank
+        global.audio.recent_log[0] = "GRAPPLE_ATTACH";
     }, "qz_audio");
 
     events_subscribe(EVT.GRAPPLE_SLING, function(evt, data) {
         // Sling release whistle
+        global.audio.recent_log[0] = "GRAPPLE_SLING";
     }, "qz_audio");
 }
 

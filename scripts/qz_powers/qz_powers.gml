@@ -12,19 +12,21 @@ function powers_init() {
         name: "Shockwave",
         cfg: global.cfg.powers.shockwave,
         available: function(player) {
-            return (player.energy >= cfg.cost && player.power_cooldowns[POWER_ID.SHOCKWAVE].ready());
+            var c = global.cfg.powers.shockwave;
+            return (player.energy >= c.cost && player.power_cooldowns[POWER_ID.SHOCKWAVE].ready());
         },
         activate: function(player) {
-            player.energy -= cfg.cost;
+            var c = global.cfg.powers.shockwave;
+            player.energy -= c.cost;
             player.power_cooldowns[POWER_ID.SHOCKWAVE].start();
 
             // Spawn radial burst hitbox centered on player
-            var r = cfg.radius;
+            var r = c.radius;
             hitbox_spawn(player, TEAM.PLAYER, player.x - r, player.y - r, r * 2, r * 2,
-                         cfg.damage, cfg.knockback * player.facing, -cfg.knock_up,
-                         cfg.hitstop, player.active_element, false, cfg.duration);
+                         c.damage, c.knockback * player.facing, -c.knock_up,
+                         c.hitstop, player.active_element, false, c.duration);
 
-            events_emit(EVT.POWER, { player: player, power_id: POWER_ID.SHOCKWAVE, name: "Shockwave" });
+            events_emit(EVT.POWER, { player: player, power_id: POWER_ID.SHOCKWAVE, name: "Shockwave", x: player.x, y: player.y, radius: r });
             return true;
         },
         update: function(player, dt) {},
@@ -37,30 +39,33 @@ function powers_init() {
         name: "Blade Surge",
         cfg: global.cfg.powers.blade_surge,
         available: function(player) {
-            return (player.energy >= cfg.cost && player.power_cooldowns[POWER_ID.BLADE_SURGE].ready());
+            var c = global.cfg.powers.blade_surge;
+            return (player.energy >= c.cost && player.power_cooldowns[POWER_ID.BLADE_SURGE].ready());
         },
         activate: function(player) {
-            player.energy -= cfg.cost;
+            var c = global.cfg.powers.blade_surge;
+            player.energy -= c.cost;
             player.power_cooldowns[POWER_ID.BLADE_SURGE].start();
 
-            player.vx = cfg.speed * player.facing;
+            player.vx = c.speed * player.facing;
             player.vy = 0;
-            player.iframes = cfg.duration;
-            player.power_timer = cfg.duration;
+            player.iframes = c.duration;
+            player.power_timer = c.duration;
             player.active_power_id = POWER_ID.BLADE_SURGE;
 
             // Spawn surge hitbox
-            hitbox_spawn(player, TEAM.PLAYER, player.x - (cfg.w / 2), player.y - (cfg.h / 2),
-                         cfg.w, cfg.h, cfg.damage, cfg.knockback * player.facing, -80,
-                         cfg.hitstop, player.active_element, true, cfg.duration);
+            hitbox_spawn(player, TEAM.PLAYER, player.x - (c.w / 2), player.y - (c.h / 2),
+                         c.w, c.h, c.damage, c.knockback * player.facing, -80,
+                         c.hitstop, player.active_element, true, c.duration);
 
-            events_emit(EVT.POWER, { player: player, power_id: POWER_ID.BLADE_SURGE, name: "Blade Surge" });
+            events_emit(EVT.POWER, { player: player, power_id: POWER_ID.BLADE_SURGE, name: "Blade Surge", x: player.x, y: player.y, facing: player.facing, speed: c.speed });
             return true;
         },
         update: function(player, dt) {
             if (player.active_power_id == POWER_ID.BLADE_SURGE) {
+                var c = global.cfg.powers.blade_surge;
                 player.power_timer -= dt;
-                player.vx = cfg.speed * player.facing;
+                player.vx = c.speed * player.facing;
                 if (player.power_timer <= 0) {
                     player.active_power_id = -1;
                     events_emit(EVT.POWER_END, { player: player, power_id: POWER_ID.BLADE_SURGE });
@@ -81,16 +86,20 @@ function powers_init() {
         name: "Blink",
         cfg: global.cfg.powers.blink,
         available: function(player) {
-            return (player.energy >= cfg.cost && player.power_cooldowns[POWER_ID.BLINK].ready());
+            var c = global.cfg.powers.blink;
+            return (player.energy >= c.cost && player.power_cooldowns[POWER_ID.BLINK].ready());
         },
         activate: function(player) {
-            player.energy -= cfg.cost;
+            var c = global.cfg.powers.blink;
+            player.energy -= c.cost;
             player.power_cooldowns[POWER_ID.BLINK].start();
 
+            var old_x = player.x;
+            var old_y = player.y;
             var dir_x = player.facing;
             if (abs(player.vx) > 10) dir_x = sign(player.vx);
-            var max_dist = cfg.distance;
-            var step = cfg.step;
+            var max_dist = c.distance;
+            var step = c.step;
             var target_x = player.x;
             var hw = player.bbox_hw;
             var hh = player.bbox_hh;
@@ -105,10 +114,10 @@ function powers_init() {
             }
 
             player.x = target_x;
-            player.vx *= cfg.keep_velocity;
-            player.iframes = cfg.iframes;
+            player.vx *= c.keep_velocity;
+            player.iframes = c.iframes;
 
-            events_emit(EVT.POWER, { player: player, power_id: POWER_ID.BLINK, name: "Blink" });
+            events_emit(EVT.POWER, { player: player, power_id: POWER_ID.BLINK, name: "Blink", start_x: old_x, start_y: old_y, end_x: target_x, end_y: player.y, facing: dir_x });
             return true;
         },
         update: function(player, dt) {},

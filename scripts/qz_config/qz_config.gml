@@ -106,8 +106,10 @@ function qz_config_init() {
     r[EVT.PERFECT_PARRY] = { trauma: 0.40, impulse: 10, zoom: 0.08 };
     r[EVT.DASH]          = { trauma: 0.00, impulse: 10, zoom: 0 };
     r[EVT.SLAM]          = { trauma: 0.50, impulse: 16, zoom: 0.03 };
-    r[EVT.OVERDRIVE]     = { trauma: 0.45, impulse: 0,  zoom: 0.10 };
-    r[EVT.POWER]         = { trauma: 0.25, impulse: 8,  zoom: 0.02 };
+    r[EVT.OVERDRIVE]        = { trauma: 0.45, impulse: 0,  zoom: 0.10 };
+    r[EVT.POWER]            = { trauma: 0.25, impulse: 8,  zoom: 0.02 };
+    r[EVT.ELEMENT_REACTION] = { trauma: 0.22, impulse: 8,  zoom: 0.02 };
+    r[EVT.ENTITY_KILLED]    = { trauma: 0.28, impulse: 10, zoom: 0.03 };
     global.cfg.camera.reactions = r;
 }
 

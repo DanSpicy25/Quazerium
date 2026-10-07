@@ -13,7 +13,8 @@ switch (active_element) {
 }
 
 if (overdrive_active) {
-    c_trim = make_color_rgb(255, 215, 0); // Gold
+    var p_pulse = sin(current_time * 0.015);
+    c_trim = merge_color(make_color_rgb(255, 215, 0), c_white, 0.25 + (p_pulse * 0.25));
 }
 
 // ---------------------------------------------------------------------
@@ -33,11 +34,15 @@ draw_set_alpha(1.0);
 // 2. OVERDRIVE AURA FLAME
 // ---------------------------------------------------------------------
 if (overdrive_active) {
+    var p_pulse = sin(current_time * 0.018);
     draw_set_color(c_yellow);
-    var aura_r = bbox_hh + 8 + (sin(current_time * 0.015) * 4);
+    var aura_r = bbox_hh + 8 + (p_pulse * 5);
     draw_circle(x, y, aura_r, true);
-    draw_set_alpha(0.3);
-    draw_circle(x, y, aura_r * 0.7, false);
+    draw_set_color(c_white);
+    draw_circle(x, y, aura_r * 0.7, true);
+    draw_set_color(c_orange);
+    draw_set_alpha(0.25 + (p_pulse * 0.1));
+    draw_circle(x, y, aura_r * 0.85, false);
     draw_set_alpha(1.0);
 }
 
@@ -93,8 +98,10 @@ if (state == PSTATE.RUN) {
 } else if (state == PSTATE.FALL) {
     draw_line_width(x - 4, py + hh, x - 6, py + hh + 4, 3);
     draw_line_width(x + 4, py + hh, x + 6, py + hh + 4, 3);
-} else if (state == PSTATE.DASH) {
-    draw_line_width(x - 4, py + hh, x - (dash_dir_x * 14), py - (dash_dir_y * 14), 3);
+} else if (state == PSTATE.DASH || active_power_id == POWER_ID.BLADE_SURGE) {
+    var ddx = (state == PSTATE.DASH) ? dash_dir_x : facing;
+    var ddy = (state == PSTATE.DASH) ? dash_dir_y : 0;
+    draw_line_width(x - 4, py + hh, x - (ddx * 14), py - (ddy * 14), 3);
 } else if (state == PSTATE.SLAM) {
     draw_line_width(x - 3, py + hh, x - 3, py + hh + 8, 3);
     draw_line_width(x + 3, py + hh, x + 3, py + hh + 8, 3);
@@ -170,7 +177,13 @@ if (state == PSTATE.ATTACK) {
     draw_set_color(c_white);
     draw_line_width(hx, hy, blade_tip_x, blade_tip_y, 3);
     draw_set_color(c_trim);
-    draw_line_width(hx, hy, blade_tip_x, blade_tip_y, 5);
+    draw_line_width(hx, hy, blade_tip_x, blade_tip_y, overdrive_active ? 7 : 5);
+    if (overdrive_active) {
+        draw_set_color(c_yellow);
+        draw_set_alpha(0.35);
+        draw_line_width(hx, hy, blade_tip_x, blade_tip_y, 11);
+        draw_set_alpha(1.0);
+    }
 } else {
     // Sheathed Blade angled on back
     var scabbard_len = 24;

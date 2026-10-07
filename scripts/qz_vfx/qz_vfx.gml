@@ -142,13 +142,22 @@ function VfxCombatTextPool(capacity = 32) constructor {
     }
 
     static spawn = function(px, py, txt, col, pscale = 1.0, plife = 0.75) {
+        // Anti-overlap: check existing active entries near px, py
+        var overlap_count = 0;
+        for (var i = 0; i < max_count; i++) {
+            var ent = entries[i];
+            if (ent.active && point_distance(ent.x, ent.y, px, py) < 28) {
+                overlap_count++;
+            }
+        }
+
         var e = entries[head];
         head = (head + 1) mod max_count;
 
         e.active = true;
-        e.x = px + random_range(-12, 12);
-        e.y = py - 10;
-        e.vy = -110;
+        e.x = px + random_range(-8, 8);
+        e.y = py - 10 - (overlap_count * 14);
+        e.vy = -110 - (overlap_count * 10);
         e.text = string(txt);
         e.color = col;
         e.scale = pscale;
@@ -182,14 +191,17 @@ function VfxCombatTextPool(capacity = 32) constructor {
 
             var t = 1.0 - (e.life / e.max_life);
             var a = (t < 0.7) ? 1.0 : (1.0 - ((t - 0.7) / 0.3));
-            var s = e.scale * (1.0 + (0.3 * (1.0 - clamp(t * 3.0, 0, 1.0))));
+            var s = e.scale * (1.0 + (0.35 * (1.0 - clamp(t * 3.5, 0, 1.0))));
 
-            // Shadow
+            // 4-way black outline for maximum contrast against any arena background
             draw_set_color(c_black);
-            draw_set_alpha(a * 0.8);
-            draw_text_transformed(e.x + 1, e.y + 1, e.text, s, s, 0);
+            draw_set_alpha(a * 0.9);
+            draw_text_transformed(e.x - 1, e.y, e.text, s, s, 0);
+            draw_text_transformed(e.x + 1, e.y, e.text, s, s, 0);
+            draw_text_transformed(e.x, e.y - 1, e.text, s, s, 0);
+            draw_text_transformed(e.x, e.y + 1, e.text, s, s, 0);
 
-            // Text
+            // Core colored text
             draw_set_color(e.color);
             draw_set_alpha(a);
             draw_text_transformed(e.x, e.y, e.text, s, s, 0);
@@ -220,9 +232,12 @@ function VfxDecalPool(capacity = 48) constructor {
         };
     }
 
-    static spawn = function(px, py, ptype, pcol, pangle = 0, pradius = 10, plife = 8.0) {
+    static spawn = function(px, py, ptype, pcol, pangle = 0, pradius = 10, plife = undefined) {
         var d = decals[head];
         head = (head + 1) mod max_count;
+
+        var q = quality_get();
+        var safe_life = (is_numeric(plife) && plife > 0) ? plife : (variable_struct_exists(q, "decal_life") ? q.decal_life : 7.0);
 
         d.active = true;
         d.x = px;
@@ -231,8 +246,8 @@ function VfxDecalPool(capacity = 48) constructor {
         d.color = pcol;
         d.angle = pangle;
         d.radius = pradius;
-        d.life = plife;
-        d.max_life = max(0.001, plife);
+        d.life = safe_life;
+        d.max_life = max(0.001, safe_life);
     };
 
     static update = function(dt) {
@@ -259,18 +274,27 @@ function VfxDecalPool(capacity = 48) constructor {
             switch (d.type) {
                 case DECAL_TYPE.SCORCH:
                     draw_circle(d.x, d.y, d.radius, false);
+                    draw_set_alpha(a * 0.35);
+                    draw_circle(d.x, d.y, d.radius * 1.4, true);
                     break;
                 case DECAL_TYPE.SLASH:
                     var dx = lengthdir_x(d.radius, d.angle);
                     var dy = lengthdir_y(d.radius, d.angle);
                     draw_line_width(d.x - dx, d.y - dy, d.x + dx, d.y + dy, 3);
+                    // Perpendicular gouge ticks
+                    var tx = lengthdir_x(d.radius * 0.35, d.angle + 90);
+                    var ty = lengthdir_y(d.radius * 0.35, d.angle + 90);
+                    draw_line(d.x - tx, d.y - ty, d.x + tx, d.y + ty);
                     break;
                 case DECAL_TYPE.CRACK:
                     for (var k = 0; k < 4; k++) {
-                        var k_ang = d.angle + (k * 90) + random_range(-15, 15);
+                        var k_ang = d.angle + (k * 90) + (k * 7);
                         var kx = lengthdir_x(d.radius, k_ang);
                         var ky = lengthdir_y(d.radius, k_ang);
                         draw_line(d.x, d.y, d.x + kx, d.y + ky);
+                        var bx = kx * 0.6 + lengthdir_x(d.radius * 0.4, k_ang + 35);
+                        var by = ky * 0.6 + lengthdir_y(d.radius * 0.4, k_ang + 35);
+                        draw_line(d.x + (kx * 0.6), d.y + (ky * 0.6), d.x + bx, d.y + by);
                     }
                     break;
             }

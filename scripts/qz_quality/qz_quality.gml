@@ -11,7 +11,9 @@ function quality_system_init() {
     // LOW: Minimal particles, no heavy shaders, capped decals, strict allocation bounds
     global.quality_profiles[QUALITY.LOW] = {
         max_particles: 100,
-        max_decals: 50,
+        max_decals: 24,
+        decal_life: 4.0,
+        power_vfx_budget: 0.5,
         enable_shaders: false,
         enable_lighting: false,
         shake_mult: 0.8,
@@ -21,7 +23,9 @@ function quality_system_init() {
     // MEDIUM: Balanced for standard PC
     global.quality_profiles[QUALITY.MEDIUM] = {
         max_particles: 500,
-        max_decals: 200,
+        max_decals: 64,
+        decal_life: 7.0,
+        power_vfx_budget: 1.0,
         enable_shaders: true,
         enable_lighting: true,
         shake_mult: 1.0,
@@ -31,7 +35,9 @@ function quality_system_init() {
     // HIGH: Rich visual effects and full post-processing
     global.quality_profiles[QUALITY.HIGH] = {
         max_particles: 2000,
-        max_decals: 1000,
+        max_decals: 128,
+        decal_life: 12.0,
+        power_vfx_budget: 1.5,
         enable_shaders: true,
         enable_lighting: true,
         shake_mult: 1.2,
