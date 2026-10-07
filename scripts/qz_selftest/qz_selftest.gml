@@ -180,6 +180,33 @@ function qz_run_selftest() {
     gc.release(true); // sling jump
     if (_assert(gc.state == GRAPPLE_STATE.IDLE && mock_player_grapple.vy < 0, "Integration: Grapple sling imparts upward velocity boost")) passes++; else fails++;
 
+    // 18. Presentation: VFX Particle Pool lifecycle
+    var vfx_p = new VfxParticlePool(10);
+    vfx_p.spawn(10, 20, 100, 0, 0, 0, 4, 1, c_white, c_yellow, 0.5, VFX_SHAPE.STREAK);
+    var p0 = vfx_p.particles[0];
+    if (_assert(p0.active && p0.x == 10 && p0.vx == 100, "Presentation: VfxParticlePool spawns streak particle")) passes++; else fails++;
+    vfx_p.update(0.6);
+    if (_assert(!p0.active, "Presentation: VfxParticlePool deactivates particle after lifetime")) passes++; else fails++;
+
+    // 19. Presentation: Floating Combat Text Pool
+    var vfx_t = new VfxCombatTextPool(8);
+    vfx_t.spawn(50, 100, "CRIT 99", c_yellow, 1.2, 0.5);
+    var t0 = vfx_t.entries[0];
+    var t_init_y = t0.y;
+    vfx_t.update(0.1);
+    if (_assert(t0.active && t0.text == "CRIT 99" && t0.y < t_init_y, "Presentation: VfxCombatTextPool floats upward")) passes++; else fails++;
+
+    // 20. Presentation: Combat Decal Pool
+    var vfx_d = new VfxDecalPool(8);
+    vfx_d.spawn(200, 300, DECAL_TYPE.CRACK, c_black, 0, 16, 2.0);
+    var d0 = vfx_d.decals[0];
+    vfx_d.update(1.0);
+    if (_assert(d0.active && d0.life == 1.0, "Presentation: VfxDecalPool tracks persistent surface decal")) passes++; else fails++;
+
+    // 21. Audio: Audio System Initialization
+    audio_system_init();
+    if (_assert(global.audio.enabled && is_array(global.audio.recent_log), "Audio: System initialized with valid state")) passes++; else fails++;
+
     show_debug_message("========================================");
     show_debug_message("QUAZERIUM SELF-TEST FINISHED: pass=" + string(passes) + " fail=" + string(fails));
     show_debug_message("QZ_SELFTEST_RESULT pass=" + string(passes) + " fail=" + string(fails));

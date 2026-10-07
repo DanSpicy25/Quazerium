@@ -186,3 +186,4 @@ Gemini can now build entirely on top of this skeleton without modifying core log
 3. **Sound FX & Music:** Connect an audio manager to the `EVT.*` bus for hit sounds, wooshes, clanks, and dynamic Overdrive music.
 4. **Shaders:** Introduce chromatic aberration on `EVT.HIT_CRITICAL`, shockwave distortion on `EVT.POWER` (Shockwave), and speed lines during `EVT.DASH` (conditioned on `quality_get().enable_shaders`).
 5. **HUD Art:** Replace the prototype debug health bars and meters with final game UI.
+

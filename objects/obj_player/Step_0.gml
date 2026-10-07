@@ -307,3 +307,43 @@ if (state != PSTATE.DASH && state != PSTATE.SLAM && state != PSTATE.HOOK) {
 // 10. Kinematic sub-stepped collision resolution
 physics_move_and_collide(id, dt);
 
+// 11. Presentation & Animation Updates
+if (on_ground && !was_on_ground) {
+    squash_x = 1.35;
+    squash_y = 0.70;
+    events_emit(EVT.LAND, { player: id, vy: vy });
+}
+was_on_ground = on_ground;
+
+squash_x = qz_approach(squash_x, 1.0, 3.5 * dt);
+squash_y = qz_approach(squash_y, 1.0, 3.5 * dt);
+
+if (state == PSTATE.RUN) {
+    run_anim_t += dt * 14.0;
+} else {
+    run_anim_t = 0;
+}
+
+for (var a = 0; a < 6; a++) {
+    var ai = afterimages[a];
+    if (ai.active) {
+        ai.alpha -= 4.0 * dt;
+        if (ai.alpha <= 0) ai.active = false;
+    }
+}
+
+if (state == PSTATE.DASH || (overdrive_active && (abs(vx) > 100 || abs(vy) > 100))) {
+    afterimage_timer -= dt;
+    if (afterimage_timer <= 0) {
+        afterimage_timer = 0.04;
+        var ai_spawn = afterimages[afterimage_head];
+        afterimage_head = (afterimage_head + 1) mod 6;
+        ai_spawn.active = true;
+        ai_spawn.x = x;
+        ai_spawn.y = y;
+        ai_spawn.facing = facing;
+        ai_spawn.alpha = 0.65;
+        ai_spawn.color = overdrive_active ? c_yellow : (active_element != ELEMENT.NONE ? c_orange : c_aqua);
+    }
+}
+

@@ -24,6 +24,7 @@ element_timer = 0;
 hitstun = 0;
 stun_timer = 0;
 iframes = 0;
+hit_flash = 0;
 kb_resist = cfg.kb_resist;
 
 aggro_range = cfg.aggro_range;

@@ -78,3 +78,15 @@ wall_jump_lock_timer = 0;
 // Stat Modifiers
 stat_mods = new StatModifierContainer();
 
+// Presentation & Animation State
+squash_x = 1.0;
+squash_y = 1.0;
+was_on_ground = true;
+run_anim_t = 0.0;
+afterimage_timer = 0.0;
+afterimages = array_create(6);
+for (var a = 0; a < 6; a++) {
+    afterimages[a] = { active: false, x: 0, y: 0, facing: 1, alpha: 0, color: c_aqua };
+}
+afterimage_head = 0;
+

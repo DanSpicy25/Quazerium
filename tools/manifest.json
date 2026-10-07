@@ -14,6 +14,8 @@
     "qz_physics": "Scripts/Gameplay",
     "qz_interaction": "Scripts/Gameplay",
     "qz_ai": "Scripts/AI",
+    "qz_vfx": "Scripts/Presentation",
+    "qz_audio": "Scripts/Presentation",
     "qz_quality": "Scripts/Performance",
     "qz_pool": "Scripts/Performance",
     "qz_selftest": "Scripts/Debug"
@@ -23,9 +25,12 @@
     "obj_camera": { "folder": "Objects/Core" },
     "obj_debug": { "folder": "Objects/Debug" },
     "obj_solid": { "folder": "Objects/Environment" },
+    "obj_environment": { "folder": "Objects/Environment" },
     "obj_grapple_anchor": { "folder": "Objects/Environment" },
     "obj_hitbox": { "folder": "Objects/Combat" },
     "obj_player": { "folder": "Objects/Gameplay" },
+    "obj_vfx": { "folder": "Objects/Presentation" },
+    "obj_hud": { "folder": "Objects/Presentation" },
     "obj_enemy_base": { "folder": "Objects/Enemies" },
     "obj_enemy_grunt": { "folder": "Objects/Enemies", "parent": "obj_enemy_base" },
     "obj_enemy_dummy": { "folder": "Objects/Enemies", "parent": "obj_enemy_base" }
@@ -45,7 +50,10 @@
       "height": 1080,
       "bg": 4279505940,
       "instances": [
+        { "object": "obj_environment", "x": 0, "y": 0 },
         { "object": "obj_camera", "x": 200, "y": 740 },
+        { "object": "obj_vfx", "x": 0, "y": 0 },
+        { "object": "obj_hud", "x": 0, "y": 0 },
         { "object": "obj_debug", "x": 0, "y": 0 },
         { "object": "obj_player", "x": 200, "y": 740 },
         { "object": "obj_solid", "x": 0, "y": 800, "scaleX": 60, "scaleY": 3 },

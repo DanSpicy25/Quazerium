@@ -9,6 +9,7 @@ if (dt <= 0) exit;
 element_update_entity(id, dt);
 if (iframes > 0) iframes = max(0, iframes - dt);
 if (hitstun > 0) hitstun = max(0, hitstun - dt);
+if (hit_flash > 0) hit_flash = max(0, hit_flash - dt);
 if (attack_cd_timer > 0) attack_cd_timer = max(0, attack_cd_timer - dt);
 
 // 2. Stun state takes top priority

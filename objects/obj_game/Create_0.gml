@@ -14,6 +14,7 @@ input_init();
 elements_system_init();
 powers_init();
 quality_system_init();
+audio_system_init();
 
 // 2. Check for headless self-test execution
 var is_selftest = (environment_get_variable("QZ_SELFTEST") == "1");

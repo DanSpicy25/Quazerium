@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"qz_audio",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"qz_audio",
+  "parent":{
+    "name":"Presentation",
+    "path":"folders/Scripts/Presentation.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
